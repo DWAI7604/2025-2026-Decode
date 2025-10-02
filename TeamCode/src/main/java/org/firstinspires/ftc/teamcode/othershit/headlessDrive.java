@@ -48,7 +48,7 @@ public class headlessDrive extends LinearOpMode{
         rightBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftFrontDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightFrontDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightFrontDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         leftBackDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         rightBackDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 

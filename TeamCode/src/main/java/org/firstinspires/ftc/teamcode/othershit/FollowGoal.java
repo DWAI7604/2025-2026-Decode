@@ -27,6 +27,8 @@ public class FollowGoal extends LinearOpMode {
     private DcMotor rightBack;
     private DcMotor rightFront;
 
+    private boolean limelightActive = false;
+
     @Override
     public void runOpMode () {
         localizer = new PinpointLocalizer(hardwareMap, 72.0 / 36653.0, new Pose2d(0, 0, Math.toRadians(0)));
@@ -60,24 +62,30 @@ public class FollowGoal extends LinearOpMode {
             telemetry.addData("status", "running");
             localizer.update();
             Pose2d pose = localizer.getPose();
+            double robotHeading = pose.heading.toDouble();
 
             double yaw = 0;
+
+            if (gamepad1.dpad_down) {
+                limelight.start();
+            } else if (gamepad1.dpad_up) {
+                limelight.stop();
+            }
 
             LLResult result = limelight.getLatestResult();
             boolean limelightValid = result != null && result.isValid();
 
             if (limelightValid) {
-                double tx = result.getTx();
 
-                // if (tx < 0) yaw = turn left
-                // if (tx > 0) yaw = turn right
+                double tx = result.getTx();
 
                 yaw = tx * 0.02;
 
                 telemetry.addData("Target X", tx);
+
             } else {
 
-                double robotHeading = pose.heading.real;
+//                double robotHeading = pose.heading.toDouble();
 
                 telemetry.addData("robotHeading", robotHeading);
 
@@ -89,13 +97,16 @@ public class FollowGoal extends LinearOpMode {
 
                 double goalHeading = Math.atan(yDist / xDist);
 
+                if (xDist < 0) // because arctan only gives values for x > 0 section of unit circle
+                    goalHeading = (3.14159) + goalHeading;
+
                 telemetry.addData("goalHeading", goalHeading);
 
-                yaw = (robotHeading - goalHeading) * 0.02;
+                yaw = (robotHeading - goalHeading) * .50;
 
             }
 
-            mecanumDrive(yaw);
+            mecanumDrive(yaw, robotHeading);
 
             telemetry.update();
         }
@@ -105,25 +116,29 @@ public class FollowGoal extends LinearOpMode {
 //
 //    }
 
-    private void mecanumDrive (double yaw) {
+    private void mecanumDrive (double yaw, double heading) {
         double leftFrontPower;
         double leftBackPower;
         double rightFrontPower;
         double rightBackPower;
 
         // controller
-        double axial = gamepad1.left_stick_y;
-        double lateral = gamepad1.left_stick_x;
+//        double axial   = (-gamepad1.left_stick_y * Math.sin(heading)) + (gamepad1.left_stick_x * Math.cos(heading));
+//        double lateral = (gamepad1.left_stick_x * Math.sin(heading)) + (-gamepad1.left_stick_y * Math.cos(heading));
+        double axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
+        double lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
 //        double yaw = gamepad1.right_stick_x;
 //        double yaw = -targetX;
         yaw = Math.min(Math.max(-yaw, -1.0), 1.0);
 
         telemetry.addData("controller", String.format("%.2f : %.2f : %.2f", axial, lateral, yaw));
 
-        leftFrontPower  = axial - lateral + yaw;
-        leftBackPower   = axial + lateral + yaw;
-        rightFrontPower = axial + lateral - yaw;
-        rightBackPower  = axial - lateral - yaw;
+        double denominator = Math.max(Math.abs(axial) + Math.abs(lateral) + Math.abs(yaw), 1);
+        
+        leftFrontPower  = (axial + lateral + yaw) / denominator;
+        leftBackPower   = (axial - lateral + yaw) / denominator;
+        rightFrontPower = (axial - lateral - yaw) / denominator;
+        rightBackPower  = (axial + lateral - yaw) / denominator;
 
         telemetry.addData("motors", String.format("%.2f : %.2f : %.2f : %.2f",
                 leftFrontPower, leftBackPower, rightFrontPower, rightBackPower));

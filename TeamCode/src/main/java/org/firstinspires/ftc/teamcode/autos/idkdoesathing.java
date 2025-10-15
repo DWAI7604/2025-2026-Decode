@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.PoseStorage;
 
 @Autonomous(name="idkdoesathing", group="Robot")
 public class idkdoesathing extends LinearOpMode {
@@ -17,20 +18,20 @@ public class idkdoesathing extends LinearOpMode {
 
         waitForStart();
 
-        while (opModeIsActive()) {
-            Actions.runBlocking(
-                    drive.actionBuilder(new Pose2d(-50, 50, Math.toRadians(-55)))
+        Actions.runBlocking(
+                drive.actionBuilder(new Pose2d(-50, 50, Math.toRadians(-55)))
+                    .waitSeconds(1)
+                    .lineToY(30)
+                    .waitSeconds(1)
+                    .splineTo(new Vector2d(-12, 30), Math.toRadians(90))
                         .waitSeconds(1)
-                        .lineToY(30)
+                    .lineToY(50)
                         .waitSeconds(1)
-                        .splineTo(new Vector2d(-12, 30), Math.toRadians(90))
-                            .waitSeconds(1)
-                        .lineToY(50)
-                            .waitSeconds(1)
-                        .setReversed(true)
-                        .splineTo(new Vector2d(-35, 30), Math.toRadians(-55 + 180))
-                            .waitSeconds(1)
-                        .build());
-        }
+                    .setReversed(true)
+                    .splineTo(new Vector2d(-35, 30), Math.toRadians(-55 + 180))
+                        .waitSeconds(1)
+                    .build());
+
+        PoseStorage.currentPose = drive.localizer.getPose();
     }
 }

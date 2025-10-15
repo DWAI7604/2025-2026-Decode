@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.othershit;
 
+import java.util.List;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -7,7 +8,6 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import java.util.List;
 
 @TeleOp(name="LimeLight", group="Linear OpMode")
 public class LimeLight extends LinearOpMode {

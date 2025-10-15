@@ -16,6 +16,8 @@ import org.firstinspires.ftc.teamcode.PinpointLocalizer;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.PoseStorage;
+
 @TeleOp(name="FollowGoal", group="Linear OpMode")
 public class FollowGoal extends LinearOpMode {
 
@@ -39,7 +41,7 @@ public class FollowGoal extends LinearOpMode {
 
     @Override
     public void runOpMode () {
-        localizer = new PinpointLocalizer(hardwareMap, 72.0 / 36653.0, new Pose2d(0, 0, Math.toRadians(0)));
+        localizer = new PinpointLocalizer(hardwareMap, 72.0 / 36653.0, PoseStorage.currentPose);
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1);

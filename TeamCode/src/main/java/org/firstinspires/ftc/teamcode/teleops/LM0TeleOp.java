@@ -76,7 +76,8 @@ public class LM0TeleOp extends LinearOpMode {
         //yOffset is the amount in the x-direction from the pinpoint computer that the y-pod is mounted
         odo.setOffsets(4.5,13.2, DistanceUnit.CM);
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
         odo.resetPosAndIMU();
 
@@ -115,6 +116,7 @@ public class LM0TeleOp extends LinearOpMode {
                 }
 
                 flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
+                flywheel.setPower(flywheelPower);
                 flywheelTimer.reset();
             }
 
@@ -125,9 +127,13 @@ public class LM0TeleOp extends LinearOpMode {
             if (feederTimer.milliseconds() > 300) {
                 if (feederState == FeederState.up) {
                     feeder.setPosition(.22);
+                    feederState = FeederState.down;
                 } else if (gamepad2.right_bumper) {
                     feeder.setPosition(.001);
+                    feederState = FeederState.up;
                 }
+
+                feederTimer.reset();
             }
 
             // ===== INTAKE STATE CHANGING =====
@@ -168,7 +174,7 @@ public class LM0TeleOp extends LinearOpMode {
 
             //Take the heading as measured by the pinpoint device
             //Manipulate the power values so that the robot moves relative to the field not the robot
-            angleOffset = odo.getHeading(AngleUnit.DEGREES);
+            angleOffset = odo.getHeading(AngleUnit.RADIANS);
             odo.update();
             axial = (gamepad1.left_stick_y * Math.cos(angleOffset) + gamepad1.left_stick_x * Math.sin(angleOffset));
             lateral = (gamepad1.left_stick_y * Math.sin(angleOffset) - gamepad1.left_stick_x * Math.cos(angleOffset));

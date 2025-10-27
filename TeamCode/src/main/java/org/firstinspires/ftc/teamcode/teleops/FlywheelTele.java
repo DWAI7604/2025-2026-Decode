@@ -22,9 +22,9 @@ public class FlywheelTele extends LinearOpMode {
         while (opModeIsActive()) {
             // === update state based on controller ===
 
-            if (gamepad1.a) {
+            if (gamepad1.b) {
                 flywheelState = FlywheelState.off;
-            } else if (gamepad1.b) {
+            } else if (gamepad1.a) {
                 flywheelState = FlywheelState.close;
             } else if (gamepad1.x) {
                 flywheelState = FlywheelState.middle;

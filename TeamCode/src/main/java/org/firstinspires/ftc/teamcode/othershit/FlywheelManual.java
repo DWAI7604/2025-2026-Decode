@@ -23,16 +23,16 @@ public class FlywheelManual extends LinearOpMode {
                     power = -1.0;
                     break;
                 case two:
-                    power = -0.85;
+                    power = -0.90;
                     break;
                 case three:
-                    power = -0.7;
+                    power = -0.80;
                     break;
                 case four:
-                    power = -0.55;
+                    power = -0.75;
                     break;
                 case five:
-                    power = -0.40;
+                    power = -0.70;
                     break;
             }
 

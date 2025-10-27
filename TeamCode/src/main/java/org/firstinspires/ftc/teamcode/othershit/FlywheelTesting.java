@@ -3,11 +3,14 @@ package org.firstinspires.ftc.teamcode.othershit;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp(name="FlywheelTesting", group="Linear OpMode")
 @Configurable
@@ -21,13 +24,13 @@ public class FlywheelTesting extends LinearOpMode {
     public static double timePause = 30;
     public static double weight = 0.1;
 
-    public static double feederPos = 0.0;
-    private Servo feeder;
-    public static boolean feederOn = false;
+//    public static double feederPos = 0.0;
+//    private Servo feeder;
+//    public static boolean feederOn = false;
 
 //    private static double TICKS_PER_ROTATION =
 
-    private DcMotor flywheel;
+    private DcMotorEx flywheel;
 
     private double prevPos;
     private double currPos;
@@ -39,8 +42,8 @@ public class FlywheelTesting extends LinearOpMode {
     public void runOpMode () {
 
         telemetry.addData("status", "initialized");
-        flywheel = hardwareMap.get(DcMotor.class, "flywheel");
-        feeder = hardwareMap.get(Servo.class, "feeder");
+        flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
+//        feeder = hardwareMap.get(Servo.class, "feeder");
 
         targetVelocity = 0;
 
@@ -58,17 +61,17 @@ public class FlywheelTesting extends LinearOpMode {
 
             telemetry.addData("status", "running");
 
-            telemetry.addData("servo: ", feeder.getPosition());
-
-            if (feederOn) {
-                feeder.setPosition(feederPos);
-            }
+//            telemetry.addData("servo: ", feeder.getPosition());
+//
+//            if (feederOn) {
+//                feeder.setPosition(feederPos);
+//            }
 
             if (timeChange.milliseconds() > timePause) {
                 currPos = flywheel.getCurrentPosition();
                 telemetry.addData("currPos: ", currPos);
 
-                velocity = ((1.0 - weight) * velocity) + weight * ((currPos - prevPos) / timeChange.milliseconds()); // ticks / seconds
+                velocity = ((1.0 - weight) * velocity) + weight * flywheel.getVelocity(AngleUnit.DEGREES) / 360.0 * 60.0; // rotations / min
                 timeChange.reset();
 
                 prevPos = currPos;
@@ -94,7 +97,7 @@ public class FlywheelTesting extends LinearOpMode {
             panelsTelemetry.getTelemetry().addData("target", targetVelocity);
             panelsTelemetry.getTelemetry().addData("current", velocity);
             panelsTelemetry.getTelemetry().addData("power", power);
-            panelsTelemetry.getTelemetry().addData("servo", feeder.getPosition());
+//            panelsTelemetry.getTelemetry().addData("servo", feeder.getPosition());
             panelsTelemetry.getTelemetry().update();
 
         }

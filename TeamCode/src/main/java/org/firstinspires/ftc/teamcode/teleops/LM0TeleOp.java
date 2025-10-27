@@ -23,6 +23,7 @@ public class LM0TeleOp extends LinearOpMode {
     private DcMotor flywheel;
     private DcMotor intake;
     private Servo feeder; // this is that lil flicky switch
+    private Servo angleAdjustServo;
     private CRServo transfer; // what is this???????
 
     private GoBildaPinpointDriver odo;
@@ -36,11 +37,13 @@ public class LM0TeleOp extends LinearOpMode {
     private double lateral;
     private double yaw;
     private double angleOffset;
+    private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
     private ElapsedTime intakeTimer = new ElapsedTime();
     private FeederState feederState = FeederState.down;
     private ElapsedTime feederTimer = new ElapsedTime();
     private ElapsedTime flywheelTimer = new ElapsedTime();
+    private ElapsedTime angleTimer = new ElapsedTime();
     private boolean b1Pressed = false;
     private boolean y2Pressed = false;
 
@@ -68,6 +71,7 @@ public class LM0TeleOp extends LinearOpMode {
         feeder = hardwareMap.get(Servo.class, "feeder");
         transfer = hardwareMap.get(CRServo.class, "transfer");
         intake = hardwareMap.get(DcMotor.class, "intake");
+        angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
 
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
@@ -86,6 +90,7 @@ public class LM0TeleOp extends LinearOpMode {
         intakeTimer.reset();
         feederTimer.reset();
         flywheelTimer.reset();
+        angleTimer.reset();
 
         while (opModeIsActive()) {
 
@@ -170,6 +175,18 @@ public class LM0TeleOp extends LinearOpMode {
                 transfer.setPower(0);
             } else if (gamepad1.dpad_down) {
                 transfer.setPower(-1);
+            }
+
+            if (angleTimer.milliseconds() > 100) {
+                if (gamepad2.dpad_left) {
+                    angleAdjust += 0.05;
+                } else if (gamepad2.dpad_right) {
+                    angleAdjust -= 0.05;
+                }
+
+                angleAdjustServo.setPosition(angleAdjust);
+                angleTimer.reset();
+
             }
 
             //Take the heading as measured by the pinpoint device

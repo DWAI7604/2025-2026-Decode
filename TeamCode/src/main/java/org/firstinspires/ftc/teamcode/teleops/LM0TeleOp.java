@@ -49,6 +49,8 @@ public class LM0TeleOp extends LinearOpMode {
     private FlipState flipState = FlipState.up;
     private boolean a1Prev = false;
     private boolean b1Prev = false;
+    private boolean a2Prev = false;
+    private boolean b2Prev = false;
 
     public void runOpMode() {
 
@@ -112,9 +114,9 @@ public class LM0TeleOp extends LinearOpMode {
                 if (gamepad2.b) { // OFF
                     flywheelPower = 0.00;
                 } else if (gamepad2.a) { // CLOSE
-                    flywheelPower = 0.45;
-                } else if (gamepad2.x) { // MEDIUM
                     flywheelPower = 0.50;
+                } else if (gamepad2.x) { // MEDIUM
+                    flywheelPower = 0.60;
                 } else if (gamepad2.y) { // FAR
                     flywheelPower = 0.70;
                 }

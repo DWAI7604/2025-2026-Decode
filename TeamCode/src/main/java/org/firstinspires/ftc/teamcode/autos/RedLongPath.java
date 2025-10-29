@@ -31,21 +31,21 @@ public class RedLongPath extends LinearOpMode {
                         .waitSeconds(1)
                         .splineTo(new Vector2d(-35, 30), Math.toRadians(-55)) // firing location
                         .waitSeconds(1)
-                        // closest line
+                        // closest line of artifacts
                         .splineTo(new Vector2d(-70.0/6, 28), Math.toRadians(90))
                         .lineToY(49)
                         .setReversed(true)
                         .splineTo(new Vector2d(-35, 30), Math.toRadians(180 - 55)) // firing location
                         .waitSeconds(1)
                         .setReversed(false)
-                        // second closest line
+                        // second closest line of artifacts
                         .splineTo(new Vector2d(70.0/6, 30), Math.toRadians(90))
                         .lineToY(49)
                         .setReversed(true)
                         .splineTo(new Vector2d(-35, 30), Math.toRadians(180 - 55)) // firing location
                         .waitSeconds(1)
                         .setReversed(false)
-                        // third closest line
+                        // third closest line of artifacts
                         .splineTo(new Vector2d(70.0/2, 34), Math.toRadians(90))
                         .lineToY(49)
                         .setReversed(true)

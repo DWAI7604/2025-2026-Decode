@@ -168,7 +168,12 @@ public class LM0TeleOp extends LinearOpMode {
                 intakeTimer.reset();
             }
 
-            //Power the transfer
+            // ===== TRANSFER INTO ROBOT =====
+            /*\
+             * dpad up brings it into robot
+             * dpad right pauses it
+             * dpad down rejects the artifact
+            \*/
             if (gamepad1.dpad_up) {
                 transfer.setPower(1);
             } else if (gamepad1.dpad_right) {
@@ -177,6 +182,11 @@ public class LM0TeleOp extends LinearOpMode {
                 transfer.setPower(-1);
             }
 
+            // ===== ADJUST ANGLE OF FLYWHEEL =====
+            /*\
+             * dpad left increases the launch angle
+             * dpad right decreases it
+            \*/
             if (angleTimer.milliseconds() > 100) {
                 if (gamepad2.dpad_left) {
                     angleAdjust += 0.05;
@@ -186,7 +196,6 @@ public class LM0TeleOp extends LinearOpMode {
 
                 angleAdjustServo.setPosition(angleAdjust);
                 angleTimer.reset();
-
             }
 
             //Take the heading as measured by the pinpoint device

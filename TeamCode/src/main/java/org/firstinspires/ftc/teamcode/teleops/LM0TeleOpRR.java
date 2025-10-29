@@ -1,0 +1,230 @@
+package org.firstinspires.ftc.teamcode.teleops;
+
+import com.acmerobotics.roadrunner.Pose2d;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.PinpointLocalizer;
+import org.firstinspires.ftc.teamcode.PoseStorage;
+
+@TeleOp(name="LM0TeleOp ROADRUNNER - Zoe", group="Linear OpMode")
+public class LM0TeleOpRR extends LinearOpMode {
+
+    private DcMotor leftFrontDriveMotor;
+    private DcMotor leftBackDriveMotor;
+    private DcMotor rightFrontDriveMotor;
+    private DcMotor rightBackDriveMotor;
+
+    private PinpointLocalizer localizer;
+    private Pose2d pose;
+
+    private DcMotor flywheel;
+    private DcMotor intake;
+    private Servo feeder; // this is that lil flicky switch
+    private Servo angleAdjustServo;
+    private CRServo transfer; // what is this???????
+
+    private GoBildaPinpointDriver odo;
+
+    private double flywheelPower;
+    private double leftFrontPower;
+    private double leftBackPower;
+    private double rightFrontPower;
+    private double rightBackPower;
+    private double axial;
+    private double lateral;
+    private double yaw;
+    private double heading;
+    private double angleAdjust;
+    private IntakeState intakeState = IntakeState.off;
+    private ElapsedTime intakeTimer = new ElapsedTime();
+    private FeederState feederState = FeederState.down;
+    private ElapsedTime feederTimer = new ElapsedTime();
+    private ElapsedTime flywheelTimer = new ElapsedTime();
+    private ElapsedTime angleTimer = new ElapsedTime();
+    private boolean b1Pressed = false;
+    private boolean y2Pressed = false;
+
+    public void runOpMode() {
+
+        localizer = new PinpointLocalizer(hardwareMap, 72.0 / 36653.0, PoseStorage.currentPose);
+
+        //Establish hardware properties for drive motors
+        leftFrontDriveMotor = hardwareMap.get(DcMotor.class, "leftFront");
+        leftBackDriveMotor = hardwareMap.get(DcMotor.class, "leftBack");
+        rightFrontDriveMotor = hardwareMap.get(DcMotor.class, "rightFront");
+        rightBackDriveMotor = hardwareMap.get(DcMotor.class, "rightBack");
+
+        leftFrontDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftBackDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightFrontDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightBackDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        leftFrontDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFrontDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //Establish hardware properties for other devices
+        flywheel = hardwareMap.get(DcMotor.class, "flywheel");
+        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        feeder = hardwareMap.get(Servo.class, "feeder");
+        transfer = hardwareMap.get(CRServo.class, "transfer");
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
+
+        waitForStart();
+
+        intakeTimer.reset();
+        feederTimer.reset();
+        flywheelTimer.reset();
+        angleTimer.reset();
+
+        while (opModeIsActive()) {
+
+            localizer.update();
+            pose = localizer.getPose();
+
+            // ===== FLYWHEEL POWER =====
+            /*\
+             * B turns off flywheel
+             * A sets flywheel to close range power
+             * X sets flywheel to medium range power
+             * Y sets flywheel to far range power
+             * dpad up increases flywheel power by 0.05
+             * dpad down decreases flywheel power by 0.05
+            \*/
+            if (flywheelTimer.milliseconds() > 400) {
+                if (gamepad2.b) { // OFF
+                    flywheelPower = 0.00;
+                } else if (gamepad2.a) { // CLOSE
+                    flywheelPower = 0.50;
+                } else if (gamepad2.x) { // MEDIUM
+                    flywheelPower = 0.75;
+                } else if (gamepad2.y) { // FAR
+                    flywheelPower = 0.85;
+                }
+
+                else if (gamepad2.dpad_up) {
+                    flywheelPower += 0.05;
+                } else if (gamepad2.dpad_down) {
+                    flywheelPower -= 0.05;
+                }
+
+                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
+                flywheel.setPower(flywheelPower);
+                flywheelTimer.reset();
+            }
+
+            // ===== FEEDER FLICKING =====
+            /*\
+             * right bumper will flick the ball up into the flywheel
+            \*/
+            if (feederTimer.milliseconds() > 300) {
+                if (feederState == FeederState.up) {
+                    feeder.setPosition(.22);
+                    feederState = FeederState.down;
+                } else if (gamepad2.right_bumper) {
+                    feeder.setPosition(.001);
+                    feederState = FeederState.up;
+                }
+
+                feederTimer.reset();
+            }
+
+            // ===== INTAKE STATE CHANGING =====
+            /*\
+             * A toggles between intaking
+             * B toggles between rejecting
+            \*/
+            if (intakeTimer.milliseconds() > 100) {
+                if (gamepad1.a) {
+                    if (intakeState == IntakeState.on) {
+                        intake.setPower(0);
+                        intakeState = IntakeState.off;
+                    } else {
+                        intake.setPower(1);
+                        intakeState = IntakeState.on;
+                    }
+                } else if (gamepad1.b) {
+                    if (intakeState == IntakeState.reject) {
+                        intake.setPower(0);
+                        intakeState = IntakeState.off;
+                    } else {
+                        intake.setPower(-1);
+                        intakeState = IntakeState.reject;
+                    }
+                }
+
+                intakeTimer.reset();
+            }
+
+            // ===== TRANSFER INTO ROBOT =====
+            /*\
+             * dpad up brings it into robot
+             * dpad right pauses it
+             * dpad down rejects the artifact
+            \*/
+            if (gamepad1.dpad_up) {
+                transfer.setPower(1);
+            } else if (gamepad1.dpad_right) {
+                transfer.setPower(0);
+            } else if (gamepad1.dpad_down) {
+                transfer.setPower(-1);
+            }
+
+            // ===== ADJUST ANGLE OF FLYWHEEL =====
+            /*\
+             * dpad left increases the launch angle
+             * dpad right decreases it
+            \*/
+            if (angleTimer.milliseconds() > 100) {
+                if (gamepad2.dpad_left) {
+                    angleAdjust += 0.05;
+                } else if (gamepad2.dpad_right) {
+                    angleAdjust -= 0.05;
+                }
+
+                angleAdjustServo.setPosition(angleAdjust);
+                angleTimer.reset();
+            }
+
+            //Take the heading as measured by the pinpoint device
+            //Manipulate the power values so that the robot moves relative to the field not the robot
+            heading = pose.heading.toDouble();
+            axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
+            lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
+            yaw = -gamepad1.right_stick_x;
+
+            leftFrontPower = (axial + lateral + yaw);
+            leftBackPower = (axial - lateral + yaw);
+            rightFrontPower = (axial - lateral - yaw);
+            rightBackPower = (axial + lateral - yaw);
+
+            leftFrontDriveMotor.setPower(leftFrontPower);
+            leftBackDriveMotor.setPower(leftBackPower);
+            rightFrontDriveMotor.setPower(rightFrontPower);
+            rightBackDriveMotor.setPower(rightBackPower);
+
+            telemetry.addData("Power", flywheelPower);
+            telemetry.addData("heading", heading);
+            telemetry.update();
+        }
+    }
+
+    enum IntakeState {
+        off, on, reject
+    }
+
+    enum FeederState {
+        up, down
+    }
+}

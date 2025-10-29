@@ -24,7 +24,8 @@ public class LM0TeleOp extends LinearOpMode {
     private DcMotor intake;
     private Servo feeder; // this is that lil flicky switch
     private Servo angleAdjustServo;
-    private CRServo transfer; // what is this???????
+    private CRServo transfer; // this is that rubber band thingy
+    private Servo flipServo;
 
     private GoBildaPinpointDriver odo;
 
@@ -44,8 +45,10 @@ public class LM0TeleOp extends LinearOpMode {
     private ElapsedTime feederTimer = new ElapsedTime();
     private ElapsedTime flywheelTimer = new ElapsedTime();
     private ElapsedTime angleTimer = new ElapsedTime();
-    private boolean b1Pressed = false;
-    private boolean y2Pressed = false;
+    private ElapsedTime flipTimer = new ElapsedTime();
+    private FlipState flipState = FlipState.up;
+    private boolean a1Prev = false;
+    private boolean b1Prev = false;
 
     public void runOpMode() {
 
@@ -72,6 +75,7 @@ public class LM0TeleOp extends LinearOpMode {
         transfer = hardwareMap.get(CRServo.class, "transfer");
         intake = hardwareMap.get(DcMotor.class, "intake");
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
+        flipServo = hardwareMap.get(Servo.class, "flap");
 
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
@@ -91,6 +95,7 @@ public class LM0TeleOp extends LinearOpMode {
         feederTimer.reset();
         flywheelTimer.reset();
         angleTimer.reset();
+        flipTimer.reset();
 
         while (opModeIsActive()) {
 
@@ -107,11 +112,11 @@ public class LM0TeleOp extends LinearOpMode {
                 if (gamepad2.b) { // OFF
                     flywheelPower = 0.00;
                 } else if (gamepad2.a) { // CLOSE
-                    flywheelPower = 0.50;
+                    flywheelPower = 0.45;
                 } else if (gamepad2.x) { // MEDIUM
-                    flywheelPower = 0.75;
+                    flywheelPower = 0.50;
                 } else if (gamepad2.y) { // FAR
-                    flywheelPower = 0.85;
+                    flywheelPower = 0.70;
                 }
 
                 else if (gamepad2.dpad_up) {
@@ -146,8 +151,13 @@ public class LM0TeleOp extends LinearOpMode {
              * A toggles between intaking
              * B toggles between rejecting
             \*/
-            if (intakeTimer.milliseconds() > 100) {
-                if (gamepad1.a) {
+//            if (intakeTimer.milliseconds() > 200) {
+
+            if (a1Prev != gamepad1.a) {
+
+                a1Prev = gamepad1.a;
+
+                if (a1Prev) {
                     if (intakeState == IntakeState.on) {
                         intake.setPower(0);
                         intakeState = IntakeState.off;
@@ -155,7 +165,13 @@ public class LM0TeleOp extends LinearOpMode {
                         intake.setPower(1);
                         intakeState = IntakeState.on;
                     }
-                } else if (gamepad1.b) {
+                }
+
+            } else if (b1Prev != gamepad1.b) {
+
+                b1Prev = gamepad1.b;
+
+                if (b1Prev) {
                     if (intakeState == IntakeState.reject) {
                         intake.setPower(0);
                         intakeState = IntakeState.off;
@@ -165,8 +181,10 @@ public class LM0TeleOp extends LinearOpMode {
                     }
                 }
 
-                intakeTimer.reset();
+
             }
+//                intakeTimer.reset();
+//            }
 
             // ===== TRANSFER INTO ROBOT =====
             /*\
@@ -190,12 +208,31 @@ public class LM0TeleOp extends LinearOpMode {
             if (angleTimer.milliseconds() > 100) {
                 if (gamepad2.dpad_left) {
                     angleAdjust += 0.05;
+                    angleTimer.reset();
                 } else if (gamepad2.dpad_right) {
                     angleAdjust -= 0.05;
+                    angleTimer.reset();
                 }
 
+                angleAdjust = Math.max(Math.min(angleAdjust, 1.0), 0);
+
                 angleAdjustServo.setPosition(angleAdjust);
-                angleTimer.reset();
+            }
+
+            // ===== FLIP THAT INTERNAL FLAP =====
+            /*\
+             * left bumper toggles it
+            \*/
+            if (flipTimer.milliseconds() > 100 && gamepad2.left_bumper) {
+                if (flipState == FlipState.down) { // move up
+                    flipState = FlipState.up;
+                    flipServo.setPosition(0.0);
+                } else {
+                    flipState = FlipState.down;
+                    flipServo.setPosition(0.2);
+                }
+
+                flipTimer.reset();
             }
 
             //Take the heading as measured by the pinpoint device
@@ -220,6 +257,7 @@ public class LM0TeleOp extends LinearOpMode {
 
             telemetry.addData("Power", flywheelPower);
             telemetry.addData("heading", angleOffset);
+            telemetry.addData("angle of flywheel", angleAdjust);
             telemetry.addData("x", odo.getEncoderX());
             telemetry.addData("y", odo.getEncoderY());
             telemetry.update();
@@ -231,6 +269,10 @@ public class LM0TeleOp extends LinearOpMode {
     }
 
     enum FeederState {
+        up, down
+    }
+
+    enum FlipState {
         up, down
     }
 }

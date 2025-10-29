@@ -65,12 +65,12 @@ public final class MecanumDrive {
         // drive model parameters
         public double inPerTick = 72.0 / 36653.0;
         public double lateralInPerTick = 0.0015481446326247683;
-        public double trackWidthTicks = 6594.606185334758;
+        public double trackWidthTicks = 5585.496620512694;
 
         // feedforward parameters (in tick units)
-        public double kS = 2.0529067566613706;
-        public double kV = 0.00038202623095143055;
-        public double kA = 0.0001;
+        public double kS = 0.9768419639384835;
+        public double kV = 0.00029149352034057806;
+        public double kA = 0.00007;
 
         // path profile parameters (in inches)
         public double maxWheelVel = 50;
@@ -82,9 +82,9 @@ public final class MecanumDrive {
         public double maxAngAccel = Math.PI;
 
         // path controller gains
-        public double axialGain = 0;
-        public double lateralGain = 0;
-        public double headingGain = 0; // shared with turn
+        public double axialGain = 7;
+        public double lateralGain = 5;
+        public double headingGain = 5; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
@@ -242,7 +242,7 @@ public final class MecanumDrive {
         //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+//        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html

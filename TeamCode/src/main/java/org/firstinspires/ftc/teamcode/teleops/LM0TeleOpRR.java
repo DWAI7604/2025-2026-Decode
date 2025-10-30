@@ -33,7 +33,7 @@ public class LM0TeleOpRR extends LinearOpMode {
     private Servo feeder; // this is that lil flicky switch
     private Servo angleAdjustServo;
     private CRServo transfer; // this is that rubber band thingy
-    private Servo flipServo;
+//    private Servo flipServo;
 
     private double flywheelPower;
     private double angleAdjust;
@@ -58,7 +58,7 @@ public class LM0TeleOpRR extends LinearOpMode {
     private boolean dpadDown2Prev = false;
     private boolean dpadLeft2Prev = false;
     private boolean dpadRight2Prev = false;
-    private boolean bumperL2Prev = false;
+//    private boolean bumperL2Prev = false;
     private boolean bumperR2Prev = false;
 
     public void runOpMode() {
@@ -88,7 +88,7 @@ public class LM0TeleOpRR extends LinearOpMode {
         transfer = hardwareMap.get(CRServo.class, "transfer");
         intake = hardwareMap.get(DcMotor.class, "intake");
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
-        flipServo = hardwareMap.get(Servo.class, "flap");
+//        flipServo = hardwareMap.get(Servo.class, "flap");
 
         waitForStart();
 
@@ -270,23 +270,23 @@ public class LM0TeleOpRR extends LinearOpMode {
                 angleAdjustServo.setPosition(angleAdjust);
             }
 
-            // ===== FLIP THAT INTERNAL FLAP =====
-            /*\
-             * left bumper toggles it
-            \*/
-            if (gamepad2.left_bumper != bumperL2Prev) {
-                bumperL2Prev = gamepad2.left_bumper;
-
-                if (bumperL2Prev) {
-                    if (flipState == FlipState.down) { // move up
-                        flipState = FlipState.up;
-                        flipServo.setPosition(0.0);
-                    } else {
-                        flipState = FlipState.down;
-                        flipServo.setPosition(0.1);
-                    }
-                }
-            }
+//            // ===== FLIP THAT INTERNAL FLAP =====
+//            /*\
+//             * left bumper toggles it
+//            \*/
+//            if (gamepad2.left_bumper != bumperL2Prev) {
+//                bumperL2Prev = gamepad2.left_bumper;
+//
+//                if (bumperL2Prev) {
+//                    if (flipState == FlipState.down) { // move up
+//                        flipState = FlipState.up;
+//                        flipServo.setPosition(0.0);
+//                    } else {
+//                        flipState = FlipState.down;
+//                        flipServo.setPosition(0.1);
+//                    }
+//                }
+//            }
 
             // ===== RESET POSITION OF ROBOT =====
             if (gamepad1.left_bumper && gamepad1.right_bumper) {

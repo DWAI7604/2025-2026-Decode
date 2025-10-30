@@ -266,23 +266,23 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
                 angleAdjustServo.setPosition(angleAdjust);
             }
 
-            // ===== FLIP THAT INTERNAL FLAP =====
-            /*\
-             * left bumper toggles it
-            \*/
-            if (gamepad2.left_bumper != bumperL2Prev) {
-                bumperL2Prev = gamepad2.left_bumper;
-
-                if (bumperL2Prev) {
-                    if (flipState == FlipState.down) { // move up
-                        flipState = FlipState.up;
-                        flipServo.setPosition(0.0);
-                    } else {
-                        flipState = FlipState.down;
-                        flipServo.setPosition(0.1);
-                    }
-                }
-            }
+//            // ===== FLIP THAT INTERNAL FLAP =====
+//            /*\
+//             * left bumper toggles it
+//            \*/
+//            if (gamepad2.left_bumper != bumperL2Prev) {
+//                bumperL2Prev = gamepad2.left_bumper;
+//
+//                if (bumperL2Prev) {
+//                    if (flipState == FlipState.down) { // move up
+//                        flipState = FlipState.up;
+//                        flipServo.setPosition(0.0);
+//                    } else {
+//                        flipState = FlipState.down;
+//                        flipServo.setPosition(0.1);
+//                    }
+//                }
+//            }
 
             // ===== RESET POSITION OF ROBOT =====
             if (gamepad1.left_bumper && gamepad1.right_bumper) { // 30, 9

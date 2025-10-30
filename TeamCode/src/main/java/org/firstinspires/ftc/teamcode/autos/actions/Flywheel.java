@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -15,6 +16,7 @@ public class Flywheel {
 
     public Flywheel(HardwareMap hardwareMap) {
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
+        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
         feeder = hardwareMap.get(Servo.class, "feeder");
     }
 
@@ -50,10 +52,11 @@ public class Flywheel {
             if (!initialized2) {
                 initialized2 = true;
                 timer2.reset();
-                feeder.setPosition(.22);
             }
 
-            if (timer2.milliseconds() > 150) {
+            if (timer2.milliseconds() < 150) {
+                feeder.setPosition(.22);
+            } else {
                 feeder.setPosition(.001);
             }
 

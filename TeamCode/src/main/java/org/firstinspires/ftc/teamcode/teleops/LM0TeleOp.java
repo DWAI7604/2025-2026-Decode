@@ -153,8 +153,6 @@ public class LM0TeleOp extends LinearOpMode {
              * A toggles between intaking
              * B toggles between rejecting
             \*/
-//            if (intakeTimer.milliseconds() > 200) {
-
             if (a1Prev != gamepad1.a) {
 
                 a1Prev = gamepad1.a;
@@ -185,8 +183,6 @@ public class LM0TeleOp extends LinearOpMode {
 
 
             }
-//                intakeTimer.reset();
-//            }
 
             // ===== TRANSFER INTO ROBOT =====
             /*\
@@ -225,13 +221,13 @@ public class LM0TeleOp extends LinearOpMode {
             /*\
              * left bumper toggles it
             \*/
-            if (flipTimer.milliseconds() > 100 && gamepad2.left_bumper) {
+            if (flipTimer.milliseconds() > 200 && gamepad2.left_bumper) {
                 if (flipState == FlipState.down) { // move up
                     flipState = FlipState.up;
                     flipServo.setPosition(0.0);
                 } else {
                     flipState = FlipState.down;
-                    flipServo.setPosition(0.2);
+                    flipServo.setPosition(0.1);
                 }
 
                 flipTimer.reset();
@@ -260,6 +256,7 @@ public class LM0TeleOp extends LinearOpMode {
             telemetry.addData("Power", flywheelPower);
             telemetry.addData("heading", angleOffset);
             telemetry.addData("angle of flywheel", angleAdjust);
+            telemetry.addData("flipServo: ", flipState);
             telemetry.addData("x", odo.getEncoderX());
             telemetry.addData("y", odo.getEncoderY());
             telemetry.update();

@@ -18,21 +18,20 @@ import org.firstinspires.ftc.teamcode.PoseStorage;
 @TeleOp(name="LM0TeleOp ROADRUNNER - Zoe", group="Linear OpMode")
 public class LM0TeleOpRR extends LinearOpMode {
 
+    private PinpointLocalizer localizer;
+    private Pose2d pose;
+
     private DcMotor leftFrontDriveMotor;
     private DcMotor leftBackDriveMotor;
     private DcMotor rightFrontDriveMotor;
     private DcMotor rightBackDriveMotor;
 
-    private PinpointLocalizer localizer;
-    private Pose2d pose;
-
     private DcMotor flywheel;
     private DcMotor intake;
     private Servo feeder; // this is that lil flicky switch
     private Servo angleAdjustServo;
-    private CRServo transfer; // what is this???????
-
-    private GoBildaPinpointDriver odo;
+    private CRServo transfer; // this is that rubber band thingy
+    private Servo flipServo;
 
     private double flywheelPower;
     private double leftFrontPower;
@@ -42,7 +41,6 @@ public class LM0TeleOpRR extends LinearOpMode {
     private double axial;
     private double lateral;
     private double yaw;
-    private double heading;
     private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
     private ElapsedTime intakeTimer = new ElapsedTime();
@@ -50,8 +48,12 @@ public class LM0TeleOpRR extends LinearOpMode {
     private ElapsedTime feederTimer = new ElapsedTime();
     private ElapsedTime flywheelTimer = new ElapsedTime();
     private ElapsedTime angleTimer = new ElapsedTime();
-    private boolean b1Pressed = false;
-    private boolean y2Pressed = false;
+    private ElapsedTime flipTimer = new ElapsedTime();
+    private FlipState flipState = FlipState.up;
+    private boolean a1Prev = false;
+    private boolean b1Prev = false;
+    private boolean a2Prev = false;
+    private boolean b2Prev = false;
 
     public void runOpMode() {
 
@@ -80,6 +82,7 @@ public class LM0TeleOpRR extends LinearOpMode {
         transfer = hardwareMap.get(CRServo.class, "transfer");
         intake = hardwareMap.get(DcMotor.class, "intake");
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
+        flipServo = hardwareMap.get(Servo.class, "flap");
 
         waitForStart();
 
@@ -87,6 +90,7 @@ public class LM0TeleOpRR extends LinearOpMode {
         feederTimer.reset();
         flywheelTimer.reset();
         angleTimer.reset();
+        flipTimer.reset();
 
         while (opModeIsActive()) {
 
@@ -106,9 +110,9 @@ public class LM0TeleOpRR extends LinearOpMode {
                 if (gamepad2.b) { // OFF
                     flywheelPower = 0.00;
                 } else if (gamepad2.a) { // CLOSE
-                    flywheelPower = 0.45;
-                } else if (gamepad2.x) { // MEDIUM
                     flywheelPower = 0.50;
+                } else if (gamepad2.x) { // MEDIUM
+                    flywheelPower = 0.60;
                 } else if (gamepad2.y) { // FAR
                     flywheelPower = 0.70;
                 }
@@ -145,8 +149,11 @@ public class LM0TeleOpRR extends LinearOpMode {
              * A toggles between intaking
              * B toggles between rejecting
             \*/
-            if (intakeTimer.milliseconds() > 100) {
-                if (gamepad1.a) {
+            if (a1Prev != gamepad1.a) {
+
+                a1Prev = gamepad1.a;
+
+                if (a1Prev) {
                     if (intakeState == IntakeState.on) {
                         intake.setPower(0);
                         intakeState = IntakeState.off;
@@ -154,7 +161,13 @@ public class LM0TeleOpRR extends LinearOpMode {
                         intake.setPower(1);
                         intakeState = IntakeState.on;
                     }
-                } else if (gamepad1.b) {
+                }
+
+            } else if (b1Prev != gamepad1.b) {
+
+                b1Prev = gamepad1.b;
+
+                if (b1Prev) {
                     if (intakeState == IntakeState.reject) {
                         intake.setPower(0);
                         intakeState = IntakeState.off;
@@ -164,7 +177,7 @@ public class LM0TeleOpRR extends LinearOpMode {
                     }
                 }
 
-                intakeTimer.reset();
+
             }
 
             // ===== TRANSFER INTO ROBOT =====
@@ -189,17 +202,36 @@ public class LM0TeleOpRR extends LinearOpMode {
             if (angleTimer.milliseconds() > 100) {
                 if (gamepad2.dpad_left) {
                     angleAdjust += 0.05;
+                    angleTimer.reset();
                 } else if (gamepad2.dpad_right) {
                     angleAdjust -= 0.05;
+                    angleTimer.reset();
                 }
 
+                angleAdjust = Math.max(Math.min(angleAdjust, 1.0), 0);
+
                 angleAdjustServo.setPosition(angleAdjust);
-                angleTimer.reset();
+            }
+
+            // ===== FLIP THAT INTERNAL FLAP =====
+            /*\
+             * left bumper toggles it
+            \*/
+            if (flipTimer.milliseconds() > 200 && gamepad2.left_bumper) {
+                if (flipState == FlipState.down) { // move up
+                    flipState = FlipState.up;
+                    flipServo.setPosition(0.0);
+                } else {
+                    flipState = FlipState.down;
+                    flipServo.setPosition(0.1);
+                }
+
+                flipTimer.reset();
             }
 
             //Take the heading as measured by the pinpoint device
             //Manipulate the power values so that the robot moves relative to the field not the robot
-            heading = pose.heading.toDouble();
+            double heading = pose.heading.toDouble();
             axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
             lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
             yaw = -gamepad1.right_stick_x;
@@ -225,6 +257,10 @@ public class LM0TeleOpRR extends LinearOpMode {
     }
 
     enum FeederState {
+        up, down
+    }
+
+    enum FlipState {
         up, down
     }
 }

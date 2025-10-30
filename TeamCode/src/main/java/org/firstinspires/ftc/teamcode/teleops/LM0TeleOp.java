@@ -11,7 +11,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
+@Disabled
 @TeleOp(name="LM0TeleOp - Zoe", group="Linear OpMode")
 public class LM0TeleOp extends LinearOpMode {
 

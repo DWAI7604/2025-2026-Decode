@@ -19,8 +19,8 @@ public class Flywheel {
     }
 
     public class Power implements Action {
-        private boolean initialized = false;
-        private ElapsedTime timer = new ElapsedTime();
+        private boolean initialized1 = false;
+        private ElapsedTime timer1 = new ElapsedTime();
         double power;
         double seconds;
 
@@ -31,30 +31,33 @@ public class Flywheel {
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            if (!initialized) {
+            if (!initialized1) {
                 flywheel.setPower(0.6);
-                initialized = true;
-                timer.reset();
+                initialized1 = true;
+                timer1.reset();
             }
 
-            return timer.seconds() < 0.5;
+            return timer1.seconds() < seconds;
         }
     }
 
     public class Launch implements Action {
-        private boolean initialized = false;
-        private ElapsedTime timer = new ElapsedTime();
+        private boolean initialized2 = false;
+        private ElapsedTime timer2 = new ElapsedTime();
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            if (!initialized) {
-                initialized = true;
-                timer.reset();
+            if (!initialized2) {
+                initialized2 = true;
+                timer2.reset();
                 feeder.setPosition(.22);
             }
 
-            if (timer.seconds() > 0.5) {
+            if (timer2.milliseconds() > 150) {
                 feeder.setPosition(.001);
+            }
+
+            if (timer2.milliseconds() > 300) {
                 return false;
             }
 

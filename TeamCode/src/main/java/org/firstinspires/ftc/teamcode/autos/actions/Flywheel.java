@@ -13,11 +13,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Flywheel {
     private DcMotorEx flywheel;
     private Servo feeder;
+    private Servo angleAdjustServo;
 
     public Flywheel(HardwareMap hardwareMap) {
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
         feeder = hardwareMap.get(Servo.class, "feeder");
+        angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
     }
 
     public class Power implements Action {
@@ -34,7 +36,7 @@ public class Flywheel {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized1) {
-                flywheel.setPower(0.6);
+                flywheel.setPower(power);
                 initialized1 = true;
                 timer1.reset();
             }
@@ -52,19 +54,45 @@ public class Flywheel {
             if (!initialized2) {
                 initialized2 = true;
                 timer2.reset();
-            }
-
-            if (timer2.milliseconds() < 150) {
-                feeder.setPosition(.22);
-            } else {
                 feeder.setPosition(.001);
             }
 
-            if (timer2.milliseconds() > 300) {
+            if (timer2.milliseconds() < 1000) {
+                feeder.setPosition(.001);
+                packet.put("target: ", "0.001");
+            } else {
+                feeder.setPosition(.22);
+                packet.put("target: ", "0.22");
+            }
+
+            packet.put("position: ", feeder.getPosition());
+
+            if (timer2.milliseconds() > 2000) {
                 return false;
             }
 
             return true;
+        }
+    }
+
+    public class Angle implements Action {
+        private boolean initialized3 = false;
+        private ElapsedTime timer3 = new ElapsedTime();
+        private double angle;
+
+        public Angle(double angle) {
+            this.angle = angle;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!initialized3) {
+                initialized3 = true;
+                timer3.reset();
+                angleAdjustServo.setPosition(angle);
+            }
+
+            return timer3.milliseconds() < 200;
         }
     }
 
@@ -74,5 +102,9 @@ public class Flywheel {
 
     public Action launch() {
         return new Launch();
+    }
+
+    public Action angle(double angle) {
+        return new Angle(angle);
     }
 }

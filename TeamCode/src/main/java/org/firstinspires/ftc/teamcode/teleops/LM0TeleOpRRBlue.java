@@ -139,8 +139,8 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
                 y2Prev = gamepad2.y;
 
                 if (y2Prev) { // FAR
-                    flywheelPower = 0.70;
-                    angleAdjust = 0.0;
+                    flywheelPower = 0.725;
+                    angleAdjust = 0.15;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -247,7 +247,7 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
                 dpadLeft2Prev = gamepad2.dpad_left;
 
                 if (dpadLeft2Prev) {
-                    angleAdjust += 0.025;
+                    angleAdjust += 0.05;
                     angleTimer.reset();
                     updateAngleOfFlywheel = true;
                 }
@@ -255,7 +255,7 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
                 dpadRight2Prev = gamepad2.dpad_right;
 
                 if (dpadRight2Prev) {
-                    angleAdjust -= 0.025;
+                    angleAdjust -= 0.05;
                     angleTimer.reset();
                     updateAngleOfFlywheel = true;
                 }
@@ -350,7 +350,7 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
         } else if (driveState == DriveState.robotCentric) {
             yaw = -gamepad1.right_stick_x;
             axial = gamepad1.left_stick_y;
-            lateral = gamepad1.left_stick_x;
+            lateral = -gamepad1.left_stick_x;
         } else if (driveState == DriveState.autoAim) {
             yaw = locateGoal();
             yaw = Math.min(Math.max(-yaw, -1.0), 1.0);
@@ -387,7 +387,7 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
         telemetry.addData("robotHeading", robotHeading);
 
         double xDist = (-72 + 5) - pose.position.x;
-        double yDist = (-72 + 16) - pose.position.y;
+        double yDist = (-72 + 12) - pose.position.y;
 
         telemetry.addData("xDist", xDist);
         telemetry.addData("yDist", yDist);

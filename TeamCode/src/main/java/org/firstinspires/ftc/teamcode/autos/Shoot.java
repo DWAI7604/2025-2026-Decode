@@ -30,7 +30,7 @@ public class Shoot extends LinearOpMode {
                 new SequentialAction(
                         flywheel.power(0.55, 1.0),
                         flywheel.launch(),
-                        flywheel.power(0.0, 0),
+                        flywheel.power(0.0, 1.0),
                         new ParallelAction(
                                 intake.transferIn(1000),
                                 intake.intakeIn(1000)

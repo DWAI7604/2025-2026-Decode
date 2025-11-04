@@ -18,7 +18,7 @@ public class flywheelTest extends RobotLinearOpMode {
     public void runOpMode() {
 
        flywheel = hardwareMap.get(DcMotor.class, "flywheel");
-       feeder = hardwareMap.get(Servo.class, "feeder");
+//       feeder = hardwareMap.get(Servo.class, "feeder");
 
        power = 0;
 
@@ -45,13 +45,13 @@ public class flywheelTest extends RobotLinearOpMode {
                 power = .45;
             }
 
-            if (gamepad1.right_bumper) {
-
-                feeder.setPosition(.55);
-            } else if (gamepad1.left_bumper) {
-
-                feeder.setPosition(.77);
-            }
+//            if (gamepad1.right_bumper) {
+//
+//                feeder.setPosition(.55);
+//            } else if (gamepad1.left_bumper) {
+//
+//                feeder.setPosition(.77);
+//            }
 
             flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
             flywheel.setPower(power);

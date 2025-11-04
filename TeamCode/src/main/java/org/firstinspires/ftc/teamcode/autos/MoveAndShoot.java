@@ -12,7 +12,8 @@ import org.firstinspires.ftc.teamcode.PoseStorage;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
-
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+@Disabled
 @Autonomous(name="MoveAndShoot", group="Robot")
 public class MoveAndShoot extends LinearOpMode {
 

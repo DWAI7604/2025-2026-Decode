@@ -35,13 +35,13 @@ public class FarThreeBallBlue extends LinearOpMode {
         Actions.runBlocking(
                 new SequentialAction(
                         new ParallelAction(
-                                flywheel.power(0.85, 2.0),
+                                flywheel.power(0.8, 4.0),
                                 flywheel.angle(0.15)
                         ),
-                        flywheel.power(0.72, 3.0),
+                        flywheel.power(0.675, 4.0),
                         flywheel.launch(),
                         new ParallelAction(
-                                flywheel.power(0.725, 0.0),
+                                flywheel.power(0.675, 0.0),
                                 intake.transferIn(1000),
                                 intake.intakeIn(1000)
                         ),

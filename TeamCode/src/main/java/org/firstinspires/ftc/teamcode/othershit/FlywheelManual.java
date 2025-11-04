@@ -3,7 +3,8 @@ package org.firstinspires.ftc.teamcode.othershit;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+@Disabled
 @TeleOp(name="flywheelManual", group="LinearOp")
 public class FlywheelManual extends LinearOpMode {
     private DcMotor flywheel;

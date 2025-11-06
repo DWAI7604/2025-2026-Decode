@@ -12,10 +12,6 @@ import com.bylazar.telemetry.PanelsTelemetry;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-
-@Disabled
 @TeleOp(name="FlywheelTesting", group="Linear OpMode")
 @Configurable
 public class FlywheelTesting extends LinearOpMode {

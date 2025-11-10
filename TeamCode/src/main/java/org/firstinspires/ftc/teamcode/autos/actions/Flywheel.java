@@ -45,6 +45,27 @@ public class Flywheel {
         }
     }
 
+    public class Velocity implements Action {
+        private boolean initialized4 = false;
+        double velocity;
+
+        public Velocity(double velocity) {
+            this.velocity = velocity;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!initialized4) {
+                flywheel.setVelocity(velocity);
+            }
+
+            packet.put("target: ", velocity);
+            packet.put("velocity: ", flywheel.getVelocity());
+
+            return Math.abs( flywheel.getVelocity() - velocity ) < 100;
+        }
+    }
+
     public class Launch implements Action {
         private boolean initialized2 = false;
         private ElapsedTime timer2 = new ElapsedTime();

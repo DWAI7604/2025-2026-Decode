@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name="FlywheelTestingNew - SINE", group="Linear OpMode")
+@TeleOp(name="FlywheelTesting - quick change", group="Linear OpMode")
 @Configurable
 public class FlywheelTestingQuickChange extends LinearOpMode {
 
@@ -27,6 +27,10 @@ public class FlywheelTestingQuickChange extends LinearOpMode {
     public static double dVal = 0;
     public static double fVal = 0;
 
+    public static double close = 100;
+    public static double med = 200;
+    public static double far = 300;
+
     private final double TICKS_PER_ROTATION = 384.5;
 
     private DcMotorEx flywheel;
@@ -36,6 +40,20 @@ public class FlywheelTestingQuickChange extends LinearOpMode {
     private ElapsedTime timeChange = new ElapsedTime();
 
 //    public static double pConst = 1.5;
+
+    private boolean useVel = true;
+
+    private boolean b2Prev = false;
+    private boolean a2Prev = false;
+    private boolean x2Prev = false;
+    private boolean y2Prev = false;
+    private boolean dpadUp2Prev = false;
+    private boolean dpadDown2Prev = false;
+    private boolean bumperR2Prev = false;
+    private boolean bumperL2Prev = false;
+
+    private double flywheelPower = 0;
+    private double flywheelTarVel = 0;
 
     @Override
     public void runOpMode () {
@@ -60,11 +78,36 @@ public class FlywheelTestingQuickChange extends LinearOpMode {
 
             telemetry.addData("status", "running");
 
-//            telemetry.addData("servo: ", feeder.getPosition());
-//
-//            if (feederOn) {
-//                feeder.setPosition(feederPos);
-//            }
+            boolean updateFlywheel = false;
+            if (gamepad2.b != b2Prev) {
+                b2Prev = gamepad2.b;
+
+                if (b2Prev) { // OFF
+                    targetVelocity = 0;
+                    updateFlywheel = true;
+                }
+            } else if (gamepad2.a != a2Prev) {
+                a2Prev = gamepad2.a;
+
+                if (a2Prev) { // CLOSE
+                    targetVelocity = close;
+                    updateFlywheel = true;
+                }
+            } else if (gamepad2.x != x2Prev) {
+                x2Prev = gamepad2.x;
+
+                if (x2Prev) { // MEDIUM
+                    targetVelocity = med;
+                    updateFlywheel = true;
+                }
+            } else if (gamepad2.y != y2Prev) {
+                y2Prev = gamepad2.y;
+
+                if (y2Prev) { // FAR
+                    targetVelocity = far;
+                    updateFlywheel = true;
+                }
+            }
 
             if (timeChange.milliseconds() > timePause) {
 //                currPos = flywheel.getCurrentPosition();
@@ -80,7 +123,7 @@ public class FlywheelTestingQuickChange extends LinearOpMode {
 
             telemetry.addData("velocity: ", velocity);
 
-            targetVelocity = (Math.sin(timer.seconds() / targetVSpread) + 1) * targetVAmp;
+//            targetVelocity = (Math.sin(timer.seconds() / targetVSpread) + 1) * targetVAmp;
 
             flywheel.setVelocity(targetVelocity * TICKS_PER_ROTATION / 60);
 

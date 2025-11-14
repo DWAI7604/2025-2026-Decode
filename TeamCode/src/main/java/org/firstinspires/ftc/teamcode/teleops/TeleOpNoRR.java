@@ -1,55 +1,41 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
-import com.acmerobotics.roadrunner.Pose2d;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.PinpointLocalizer;
-import org.firstinspires.ftc.teamcode.PoseStorage;
-
-@TeleOp(name="LM0TeleOp - RED", group="Linear OpMode")
-public class LM0TeleOpRR extends LinearOpMode {
+//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+//
+//@Disabled
+@TeleOp(name="TeleOp - NO AUTOAIM / HEADLESS", group="Linear OpMode")
+public class TeleOpNoRR extends LinearOpMode {
 
     private static double PI_CONST = 3.14159;
-
-    private PinpointLocalizer localizer;
-    private Pose2d pose;
 
     private DcMotor leftFrontDriveMotor;
     private DcMotor leftBackDriveMotor;
     private DcMotor rightFrontDriveMotor;
     private DcMotor rightBackDriveMotor;
 
-    private DcMotor flywheel;
+    private DcMotorEx flywheel;
     private DcMotor intake;
     private Servo feeder; // this is that lil flicky switch
     private Servo angleAdjustServo;
-    private CRServo transfer; // this is that rubber band thingy
-//    private Servo flipServo;
+    private DcMotor passthrough; // passthrough
 
     private double flywheelPower;
+    private double flywheelTarVel = 0;
     private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
-    private ElapsedTime intakeTimer = new ElapsedTime();
     private FeederState feederState = FeederState.down;
     private ElapsedTime feederTimer = new ElapsedTime();
-    private ElapsedTime flywheelTimer = new ElapsedTime();
-    private ElapsedTime angleTimer = new ElapsedTime();
-    private ElapsedTime flipTimer = new ElapsedTime();
-    private FlipState flipState = FlipState.up;
-    private DriveState driveState = DriveState.fieldCentric;
     private boolean a1Prev = false;
     private boolean b1Prev = false;
-    private boolean x1Prev = false;
-    private boolean y1Prev = false;
     private boolean a2Prev = false;
     private boolean b2Prev = false;
     private boolean x2Prev = false;
@@ -58,12 +44,9 @@ public class LM0TeleOpRR extends LinearOpMode {
     private boolean dpadDown2Prev = false;
     private boolean dpadLeft2Prev = false;
     private boolean dpadRight2Prev = false;
-//    private boolean bumperL2Prev = false;
     private boolean bumperR2Prev = false;
 
     public void runOpMode() {
-
-        localizer = new PinpointLocalizer(hardwareMap, 72.0 / 36653.0, PoseStorage.currentPose);
 
         //Establish hardware properties for drive motors
         leftFrontDriveMotor = hardwareMap.get(DcMotor.class, "leftFront");
@@ -82,26 +65,21 @@ public class LM0TeleOpRR extends LinearOpMode {
         rightBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //Establish hardware properties for other devices
-        flywheel = hardwareMap.get(DcMotor.class, "flywheel");
+        flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(800, 0.2, 0, 0));
         feeder = hardwareMap.get(Servo.class, "feeder");
-        transfer = hardwareMap.get(CRServo.class, "transfer");
+        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
+        passthrough.setDirection(DcMotorSimple.Direction.REVERSE);
+        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         intake = hardwareMap.get(DcMotor.class, "intake");
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
-//        flipServo = hardwareMap.get(Servo.class, "flap");
 
         waitForStart();
 
-        intakeTimer.reset();
         feederTimer.reset();
-        flywheelTimer.reset();
-        angleTimer.reset();
-        flipTimer.reset();
 
         while (opModeIsActive()) {
-
-            localizer.update();
-            pose = localizer.getPose();
 
             // ===== FLYWHEEL POWER & PRESETS =====
             /*\
@@ -118,6 +96,7 @@ public class LM0TeleOpRR extends LinearOpMode {
 
                 if (b2Prev) { // OFF
                     flywheelPower = 0.00;
+                    flywheelTarVel = 0;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.a != a2Prev) {
@@ -125,6 +104,7 @@ public class LM0TeleOpRR extends LinearOpMode {
 
                 if (a2Prev) { // CLOSE
                     flywheelPower = 0.525;
+                    flywheelTarVel = 870;
                     angleAdjust = 1.0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
@@ -134,6 +114,7 @@ public class LM0TeleOpRR extends LinearOpMode {
 
                 if (x2Prev) { // MEDIUM
                     flywheelPower = 0.60;
+                    flywheelTarVel = 1060;
                     angleAdjust = 0.6;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
@@ -143,6 +124,7 @@ public class LM0TeleOpRR extends LinearOpMode {
 
                 if (y2Prev) { // FAR
                     flywheelPower = 0.725;
+                    flywheelTarVel = 1360;
                     angleAdjust = 0.15;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
@@ -154,6 +136,7 @@ public class LM0TeleOpRR extends LinearOpMode {
 
                 if (dpadUp2Prev) {
                     flywheelPower += 0.025;
+                    flywheelTarVel += 10;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.dpad_down != dpadDown2Prev) {
@@ -161,13 +144,20 @@ public class LM0TeleOpRR extends LinearOpMode {
 
                 if (dpadDown2Prev) {
                     flywheelPower -= 0.025;
+                    flywheelTarVel -= 10;
                     updateFlywheel = true;
                 }
             }
 
             if (updateFlywheel) {
-                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
-                flywheel.setPower(flywheelPower);
+//                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
+//                flywheel.setPower(flywheelPower);
+
+                flywheel.setVelocity(flywheelTarVel);
+            }
+
+            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) < 50) {
+                gamepad2.rumble(0.9, 0.9, 50);
             }
 
             // ===== FEEDER FLICKING =====
@@ -227,18 +217,18 @@ public class LM0TeleOpRR extends LinearOpMode {
 
             }
 
-            // ===== TRANSFER INTO ROBOT =====
+            // ===== PASSTHROUGH =====
             /*\
              * dpad up brings it into robot
              * dpad right pauses it
              * dpad down rejects the artifact
             \*/
             if (gamepad1.dpad_up) {
-                transfer.setPower(1);
+                passthrough.setPower(0.5);
             } else if (gamepad1.dpad_right) {
-                transfer.setPower(0);
+                passthrough.setPower(0);
             } else if (gamepad1.dpad_down) {
-                transfer.setPower(-1);
+                passthrough.setPower(-0.5);
             }
 
             // ===== ADJUST ANGLE OF FLYWHEEL =====
@@ -252,7 +242,6 @@ public class LM0TeleOpRR extends LinearOpMode {
 
                 if (dpadLeft2Prev) {
                     angleAdjust += 0.05;
-                    angleTimer.reset();
                     updateAngleOfFlywheel = true;
                 }
             } else if (gamepad2.dpad_right != dpadRight2Prev) {
@@ -260,7 +249,6 @@ public class LM0TeleOpRR extends LinearOpMode {
 
                 if (dpadRight2Prev) {
                     angleAdjust -= 0.05;
-                    angleTimer.reset();
                     updateAngleOfFlywheel = true;
                 }
             }
@@ -270,67 +258,13 @@ public class LM0TeleOpRR extends LinearOpMode {
                 angleAdjustServo.setPosition(angleAdjust);
             }
 
-//            // ===== FLIP THAT INTERNAL FLAP =====
-//            /*\
-//             * left bumper toggles it
-//            \*/
-//            if (gamepad2.left_bumper != bumperL2Prev) {
-//                bumperL2Prev = gamepad2.left_bumper;
-//
-//                if (bumperL2Prev) {
-//                    if (flipState == FlipState.down) { // move up
-//                        flipState = FlipState.up;
-//                        flipServo.setPosition(0.0);
-//                    } else {
-//                        flipState = FlipState.down;
-//                        flipServo.setPosition(0.1);
-//                    }
-//                }
-//            }
-
-            // ===== RESET POSITION OF ROBOT =====
-            if (gamepad1.left_bumper && gamepad1.right_bumper) {
-                localizer.setPose( new Pose2d(72 - 9, -72 + 30, -PI_CONST / 2.0) );
-            }
-
             // ===== DRIVE THE ROBOT =====
-            /*\
-             * x button toggles between field centric and robot centric
-             * y button toggles between field centric and auto aim
-            \*/
-            if (x1Prev != gamepad1.x) {
-
-                x1Prev = gamepad1.x;
-
-                if (x1Prev) { // this code only runs when the button is pressed, not released
-                    if (driveState == DriveState.fieldCentric) {
-                        driveState = DriveState.robotCentric;
-                    } else {
-                        driveState = DriveState.fieldCentric;
-                    }
-                }
-
-            } else if (y1Prev != gamepad1.y) {
-
-                y1Prev = gamepad1.y;
-
-                if (y1Prev) { // this code only runs when the button is pressed, not released
-                    if (driveState == DriveState.autoAim) {
-                        driveState = DriveState.fieldCentric;
-                    } else {
-                        driveState = DriveState.autoAim;
-                    }
-                }
-
-            }
             mecanumDrive();
 
             telemetry.addData("Power", flywheelPower);
-            telemetry.addData("heading", pose.heading.toDouble());
             telemetry.addData("angle of flywheel", angleAdjust);
-            telemetry.addData("flipServo: ", flipState);
-            telemetry.addData("x", pose.position.x);
-            telemetry.addData("y", pose.position.y);
+            telemetry.addData("tar vel", flywheelTarVel);
+            telemetry.addData("actual vel", flywheel.getVelocity());
             telemetry.update();
         }
     }
@@ -340,29 +274,13 @@ public class LM0TeleOpRR extends LinearOpMode {
         double leftBackPower;
         double rightFrontPower;
         double rightBackPower;
-
-        double heading = pose.heading.toDouble();
-        heading = heading - PI_CONST / 2.0; // adjusted for (hopefully) red's POV
         double yaw = 0;
         double axial = 0;
         double lateral = 0;
 
-        if (driveState == DriveState.fieldCentric) {
-            yaw = -gamepad1.right_stick_x;
-            axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
-            lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
-        } else if (driveState == DriveState.robotCentric) {
-            yaw = -gamepad1.right_stick_x;
-            axial = gamepad1.left_stick_y;
-            lateral = -gamepad1.left_stick_x;
-        } else if (driveState == DriveState.autoAim) {
-            yaw = locateGoal();
-            yaw = Math.min(Math.max(-yaw, -1.0), 1.0);
-            axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
-            lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
-        }
-
-//        telemetry.addData("controller", String.format("%.2f : %.2f : %.2f", axial, lateral, yaw));
+        yaw = -gamepad1.right_stick_x;
+        axial = gamepad1.left_stick_y;
+        lateral = -gamepad1.left_stick_x;
 
         double denominator = Math.max(Math.abs(axial) + Math.abs(lateral) + Math.abs(yaw), 1);
 
@@ -371,59 +289,17 @@ public class LM0TeleOpRR extends LinearOpMode {
         rightFrontPower = (axial - lateral - yaw) / denominator;
         rightBackPower  = (axial + lateral - yaw) / denominator;
 
-//        telemetry.addData("motors", String.format("%.2f : %.2f : %.2f : %.2f",
-//                leftFrontPower, leftBackPower, rightFrontPower, rightBackPower));
-
         leftFrontDriveMotor.setPower(leftFrontPower);
         leftBackDriveMotor.setPower(leftBackPower);
         rightFrontDriveMotor.setPower(rightFrontPower);
         rightBackDriveMotor.setPower(rightBackPower);
-
-        telemetry.addData("heading", heading);
     } // updates motors according to gamepad + locateGoal
-
-    public double locateGoal () { // returns the yaw value so that the robot turns to the RED goal
-
-        double yaw = 0;
-
-        double robotHeading = pose.heading.toDouble();
-
-        telemetry.addData("robotHeading", robotHeading);
-
-        double xDist = (-72 + 3) - pose.position.x;
-        double yDist = (72 - 5) - pose.position.y;
-
-        telemetry.addData("xDist", xDist);
-        telemetry.addData("yDist", yDist);
-
-        double goalHeading = Math.atan(yDist / xDist);
-
-        if (xDist < 0) // because arctan only gives values for x > 0 section of unit circle
-            goalHeading = PI_CONST + goalHeading;
-
-        goalHeading = (goalHeading - PI_CONST) % (2.0 * PI_CONST);
-
-        telemetry.addData("goalHeading", goalHeading);
-
-        yaw = (robotHeading - goalHeading) * .50;
-
-        return yaw;
-
-    } // returns yaw for rotation to goal
-
-    enum DriveState {
-        fieldCentric, autoAim, robotCentric
-    }
 
     enum IntakeState {
         off, on, reject
     }
 
     enum FeederState {
-        up, down
-    }
-
-    enum FlipState {
         up, down
     }
 }

@@ -27,9 +27,9 @@ public class FlywheelTestingQuickChange extends LinearOpMode {
     public static double dVal = 0;
     public static double fVal = 0;
 
-    public static double close = 100;
-    public static double med = 200;
-    public static double far = 300;
+    public static double close = 870;
+    public static double med = 1060;
+    public static double far = 1360;
 
     private final double TICKS_PER_ROTATION = 384.5;
 
@@ -84,6 +84,7 @@ public class FlywheelTestingQuickChange extends LinearOpMode {
 
                 if (b2Prev) { // OFF
                     targetVelocity = 0;
+                    flywheelPower = 0;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.a != a2Prev) {
@@ -91,6 +92,7 @@ public class FlywheelTestingQuickChange extends LinearOpMode {
 
                 if (a2Prev) { // CLOSE
                     targetVelocity = close;
+                    flywheelPower = 0.525;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.x != x2Prev) {
@@ -98,6 +100,7 @@ public class FlywheelTestingQuickChange extends LinearOpMode {
 
                 if (x2Prev) { // MEDIUM
                     targetVelocity = med;
+                    flywheelPower = 0.60;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.y != y2Prev) {
@@ -105,27 +108,29 @@ public class FlywheelTestingQuickChange extends LinearOpMode {
 
                 if (y2Prev) { // FAR
                     targetVelocity = far;
+                    flywheelPower = 0.725;
                     updateFlywheel = true;
                 }
             }
 
-            if (timeChange.milliseconds() > timePause) {
-//                currPos = flywheel.getCurrentPosition();
-//                telemetry.addData("currPos: ", currPos);
-
-                velocity = ((1.0 - weight) * velocity) + weight * flywheel.getVelocity() / TICKS_PER_ROTATION * 60; // 60 seconds per min
-                timeChange.reset();
-
-//                prevPos = currPos;
-
-                flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(pVal, iVal, dVal, fVal));
-            }
+//            if (timeChange.milliseconds() > timePause) {
+////                currPos = flywheel.getCurrentPosition();
+////                telemetry.addData("currPos: ", currPos);
+//
+//                velocity = ((1.0 - weight) * velocity) + weight * flywheel.getVelocity(); // 60 seconds per min
+//                timeChange.reset();
+//
+////                prevPos = currPos;
+//
+//                flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(pVal, iVal, dVal, fVal));
+//            }
 
             telemetry.addData("velocity: ", velocity);
 
 //            targetVelocity = (Math.sin(timer.seconds() / targetVSpread) + 1) * targetVAmp;
 
-            flywheel.setVelocity(targetVelocity * TICKS_PER_ROTATION / 60);
+            flywheel.setPower(flywheelPower);
+//            flywheel.setVelocity(targetVelocity);
 
 //            double error = targetVelocity - velocity;
 //            double power = pConst * Math.sqrt(Math.abs(error)) * Math.signum(error);
@@ -142,7 +147,7 @@ public class FlywheelTestingQuickChange extends LinearOpMode {
 //            telemetry.update();
             panelsTelemetry.getTelemetry().addData("target", targetVelocity);
             panelsTelemetry.getTelemetry().addData("current", velocity);
-            panelsTelemetry.getTelemetry().addData("actual current", flywheel.getVelocity() / TICKS_PER_ROTATION * 60);
+            panelsTelemetry.getTelemetry().addData("actual current", flywheel.getVelocity());
             panelsTelemetry.getTelemetry().addData("power", flywheel.getPower());
             panelsTelemetry.getTelemetry().update();
 

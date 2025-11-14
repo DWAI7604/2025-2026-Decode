@@ -12,6 +12,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.PinpointLocalizer;
 import org.firstinspires.ftc.teamcode.PoseStorage;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+@Disabled
 @TeleOp(name="LM0TeleOp - BLUE", group="Linear OpMode")
 public class LM0TeleOpRRBlue extends LinearOpMode {
 

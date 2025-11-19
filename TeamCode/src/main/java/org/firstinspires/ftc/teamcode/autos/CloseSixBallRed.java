@@ -26,18 +26,18 @@ public class CloseSixBallRed extends LinearOpMode {
         Intake intake = new Intake(hardwareMap);
 
         Action moveToLaunch = drive.actionBuilder(new Pose2d(-57, 44, Math.toRadians(-55)))
-                .splineToLinearHeading(new Pose2d(new Vector2d(-24, 24), Math.toRadians(-55)), 0)
+                .splineTo(new Vector2d(-42, 24), Math.toRadians(-55))
                 .build();
 
-        Action moveThroughIntake = drive.actionBuilder(new Pose2d(-24, 24, Math.toRadians(-55)))
-                .splineToSplineHeading(new Pose2d(new Vector2d(-70.0/6, 28), Math.toRadians(90)), Math.toRadians(90))
+        Action moveThroughIntake = drive.actionBuilder(new Pose2d(-42, 24, Math.toRadians(-55)))
+                .splineTo(new Vector2d(-70.0/6, 28), Math.toRadians(90))
                 .lineToYConstantHeading(52)
                 .setReversed(true)
-                .splineTo(new Vector2d(-24, 24), Math.toRadians(-55 + 180))
+                .splineTo(new Vector2d(-42, 24), Math.toRadians(-55 + 180))
                 .build();
 
-        Action moveToPark = drive.actionBuilder(new Pose2d(-24, 24, Math.toRadians(-55 + 180)))
-                .splineToLinearHeading(new Pose2d(new Vector2d(-35, 12), Math.toRadians(-90)), 0)
+        Action moveToPark = drive.actionBuilder(new Pose2d(-42, 24, Math.toRadians(-55 + 180)))
+                .splineTo(new Vector2d(-40, 14), Math.toRadians(-90))
                 .build();
 
         waitForStart();

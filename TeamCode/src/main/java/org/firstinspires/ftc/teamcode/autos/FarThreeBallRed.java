@@ -25,9 +25,14 @@ public class FarThreeBallRed extends LinearOpMode {
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);
 
-        Action moveToPark = drive.actionBuilder(new Pose2d(57, 12, -0.38))
+        Action moveToLaunch = drive.actionBuilder(new Pose2d(60, 16, 0))
                 .setReversed(true)
-                .splineTo(new Vector2d(55, 38), Math.toRadians(-90))
+                .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
+                .build();
+
+        Action moveToPark = drive.actionBuilder(new Pose2d(55, 18, -0.38))
+                .setReversed(true)
+                .splineToLinearHeading(new Pose2d(new Vector2d(60, 38), Math.toRadians(-90)), 0)
                 .build();
 
         waitForStart();
@@ -35,26 +40,24 @@ public class FarThreeBallRed extends LinearOpMode {
         Actions.runBlocking(
                 new SequentialAction(
                         new ParallelAction(
-                                flywheel.power(0.8, 4.0),
-                                flywheel.angle(0.15)
+                                flywheel.velocity(1580),
+                                flywheel.angle(0)
                         ),
-                        flywheel.power(0.675, 4.0),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                flywheel.power(0.675, 0.0),
-                                intake.transferIn(1000),
-                                intake.intakeIn(1000)
-                        ),
-                        new SleepAction(2),
                         flywheel.launch(),
                         new ParallelAction(
                                 intake.transferIn(1000),
                                 intake.intakeIn(1000)
                         ),
-                        new SleepAction(2),
+                        flywheel.velocity(1580),
                         flywheel.launch(),
                         new ParallelAction(
-                                flywheel.power(0.0, 0),
+                                intake.transferIn(1000),
+                                intake.intakeIn(1000)
+                        ),
+                        flywheel.velocity(1580),
+                        flywheel.launch(),
+                        new ParallelAction(
+                                flywheel.velocity(0),
                                 moveToPark
                         )
                 )

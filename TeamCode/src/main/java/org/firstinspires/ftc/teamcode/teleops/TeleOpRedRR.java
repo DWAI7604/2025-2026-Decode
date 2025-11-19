@@ -4,15 +4,22 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.PinpointLocalizer;
 import org.firstinspires.ftc.teamcode.PoseStorage;
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+
 @TeleOp(name="TeleOp - RED", group="Linear OpMode")
+@Configurable
 public class TeleOpRedRR extends LinearOpMode {
+
+    public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
 
     private static double PI_CONST = 3.14159;
 
@@ -24,13 +31,15 @@ public class TeleOpRedRR extends LinearOpMode {
     private DcMotor rightFrontDriveMotor;
     private DcMotor rightBackDriveMotor;
 
-    private DcMotor flywheel;
+    private DcMotorEx flywheel;
     private DcMotor intake;
     private Servo feeder; // this is that lil flicky switch
     private Servo angleAdjustServo;
     private DcMotor passthrough; // passthrough
 
+    private boolean passthroughOn = false;
     private double flywheelPower;
+    private double flywheelTarVel = 0;
     private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
     private FeederState feederState = FeederState.down;
@@ -60,10 +69,10 @@ public class TeleOpRedRR extends LinearOpMode {
         rightFrontDriveMotor = hardwareMap.get(DcMotor.class, "rightFront");
         rightBackDriveMotor = hardwareMap.get(DcMotor.class, "rightBack");
 
-        leftFrontDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftBackDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightFrontDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightBackDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFrontDriveMotor.setDirection(DcMotor.Direction.FORWARD);
+        leftBackDriveMotor.setDirection(DcMotor.Direction.FORWARD);
+        rightFrontDriveMotor.setDirection(DcMotor.Direction.REVERSE);
+        rightBackDriveMotor.setDirection(DcMotor.Direction.REVERSE);
 
         leftFrontDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -71,10 +80,12 @@ public class TeleOpRedRR extends LinearOpMode {
         rightBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //Establish hardware properties for other devices
-        flywheel = hardwareMap.get(DcMotor.class, "flywheel");
-        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
+        flywheel.setDirection(DcMotor.Direction.REVERSE);
+        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(800, 0.2, 0, 0));
         feeder = hardwareMap.get(Servo.class, "feeder");
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
+        passthrough.setDirection(DcMotor.Direction.REVERSE);
         passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         intake = hardwareMap.get(DcMotor.class, "intake");
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
@@ -103,6 +114,7 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (b2Prev) { // OFF
                     flywheelPower = 0.00;
+                    flywheelTarVel = 0;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.a != a2Prev) {
@@ -110,6 +122,7 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (a2Prev) { // CLOSE
                     flywheelPower = 0.525;
+                    flywheelTarVel = 1000;
                     angleAdjust = 1.0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
@@ -119,7 +132,8 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (x2Prev) { // MEDIUM
                     flywheelPower = 0.60;
-                    angleAdjust = 0.6;
+                    flywheelTarVel = 1400;
+                    angleAdjust = 0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -128,7 +142,8 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (y2Prev) { // FAR
                     flywheelPower = 0.725;
-                    angleAdjust = 0.15;
+                    flywheelTarVel = 1580;
+                    angleAdjust = 0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -139,6 +154,7 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (dpadUp2Prev) {
                     flywheelPower += 0.025;
+                    flywheelTarVel += 10;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.dpad_down != dpadDown2Prev) {
@@ -146,13 +162,21 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (dpadDown2Prev) {
                     flywheelPower -= 0.025;
+                    flywheelTarVel -= 10;
                     updateFlywheel = true;
                 }
             }
 
             if (updateFlywheel) {
-                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
-                flywheel.setPower(flywheelPower);
+//                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
+//                flywheel.setPower(flywheelPower);
+
+                flywheel.setVelocity(flywheelTarVel);
+            }
+
+            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) < 50) {
+                gamepad2.rumble(0.5, 0.5, 50);
+                telemetry.addData("rumble: ", "is rumbling");
             }
 
             // ===== FEEDER FLICKING =====
@@ -160,17 +184,24 @@ public class TeleOpRedRR extends LinearOpMode {
              * right bumper will flick the ball up into the flywheel
             \*/
 
-            if (feederTimer.milliseconds() > 150) {
+            if (feederTimer.milliseconds() < 50) {
+                passthrough.setPower(-0.5);
+                passthroughOn = false;
+            } else if (feederTimer.milliseconds() < 250) {
+                feeder.setPosition(.001);
+                feederState = FeederState.up;
+                passthrough.setPower(0);
+            }
+
+            if (feederTimer.milliseconds() > 250) {
 
                 if (feederState == FeederState.up) {
-                    feeder.setPosition(.22);
+                    feeder.setPosition(0.4);
                     feederState = FeederState.down;
                 } else if (gamepad2.right_bumper != bumperR2Prev) {
                     bumperR2Prev = gamepad2.right_bumper;
 
                     if (bumperR2Prev) {
-                        feeder.setPosition(.001);
-                        feederState = FeederState.up;
                         feederTimer.reset();
                     }
                 }
@@ -219,11 +250,18 @@ public class TeleOpRedRR extends LinearOpMode {
              * dpad down rejects the artifact
             \*/
             if (gamepad1.dpad_up) {
-                passthrough.setPower(0.1);
+                passthrough.setPower(0.5);
+                passthroughOn = true;
             } else if (gamepad1.dpad_right) {
                 passthrough.setPower(0);
+                passthroughOn = false;
             } else if (gamepad1.dpad_down) {
-                passthrough.setPower(-0.1);
+                passthrough.setPower(-0.5);
+                passthroughOn = false;
+            }
+
+            if (passthroughOn) {
+                gamepad1.rumble(0.5, 0.5, 50);
             }
 
             // ===== ADJUST ANGLE OF FLYWHEEL =====
@@ -293,9 +331,15 @@ public class TeleOpRedRR extends LinearOpMode {
             telemetry.addData("Power", flywheelPower);
             telemetry.addData("heading", pose.heading.toDouble());
             telemetry.addData("angle of flywheel", angleAdjust);
+            telemetry.addData("velocity of flywheel", flywheel.getVelocity());
+            telemetry.addData("TARVEL of flywheel", flywheelTarVel);
             telemetry.addData("x", pose.position.x);
             telemetry.addData("y", pose.position.y);
             telemetry.update();
+
+            panelsTelemetry.getTelemetry().addData("flywheel velocity", flywheel.getVelocity());
+            panelsTelemetry.getTelemetry().addData("flywheel target", flywheelTarVel);
+            panelsTelemetry.getTelemetry().update();
         }
     }
 
@@ -325,8 +369,6 @@ public class TeleOpRedRR extends LinearOpMode {
             axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
             lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
         }
-
-//        telemetry.addData("controller", String.format("%.2f : %.2f : %.2f", axial, lateral, yaw));
 
         double denominator = Math.max(Math.abs(axial) + Math.abs(lateral) + Math.abs(yaw), 1);
 

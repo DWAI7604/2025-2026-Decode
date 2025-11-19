@@ -9,13 +9,21 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-//
-//@Disabled
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+@Disabled
 @TeleOp(name="TeleOp - NO AUTOAIM / HEADLESS", group="Linear OpMode")
+@Configurable
 public class TeleOpNoRR extends LinearOpMode {
 
-    private static double PI_CONST = 3.14159;
+    public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
+
+    public static double feederUpPosition = 0.40;
+    public static double feederTimerWait = 300;
+    public static double feederTimerDelay = 50;
 
     private DcMotor leftFrontDriveMotor;
     private DcMotor leftBackDriveMotor;
@@ -104,7 +112,7 @@ public class TeleOpNoRR extends LinearOpMode {
 
                 if (a2Prev) { // CLOSE
                     flywheelPower = 0.525;
-                    flywheelTarVel = 870;
+                    flywheelTarVel = 1000;
                     angleAdjust = 1.0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
@@ -114,8 +122,8 @@ public class TeleOpNoRR extends LinearOpMode {
 
                 if (x2Prev) { // MEDIUM
                     flywheelPower = 0.60;
-                    flywheelTarVel = 1060;
-                    angleAdjust = 0.6;
+                    flywheelTarVel = 1400;
+                    angleAdjust = 0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -124,8 +132,8 @@ public class TeleOpNoRR extends LinearOpMode {
 
                 if (y2Prev) { // FAR
                     flywheelPower = 0.725;
-                    flywheelTarVel = 1360;
-                    angleAdjust = 0.15;
+                    flywheelTarVel = 1580;
+                    angleAdjust = 0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -157,25 +165,32 @@ public class TeleOpNoRR extends LinearOpMode {
             }
 
             if (Math.abs(flywheel.getVelocity() - flywheelTarVel) < 50) {
-                gamepad2.rumble(0.9, 0.9, 50);
+                gamepad2.rumble(50);
             }
 
             // ===== FEEDER FLICKING =====
             /*\
              * right bumper will flick the ball up into the flywheel
+             * BUT BEFORE THAT it runs the feeder on reject mode and then kills it
             \*/
 
-            if (feederTimer.milliseconds() > 150) {
+            if (feederTimer.milliseconds() < feederTimerDelay) {
+                passthrough.setPower(-0.5);
+            } else if (feederTimer.milliseconds() < feederTimerWait) {
+                feeder.setPosition(.001);
+                feederState = FeederState.up;
+                passthrough.setPower(0);
+            }
+
+            if (feederTimer.milliseconds() > feederTimerWait) {
 
                 if (feederState == FeederState.up) {
-                    feeder.setPosition(.22);
+                    feeder.setPosition(feederUpPosition); // 0.4 currently
                     feederState = FeederState.down;
                 } else if (gamepad2.right_bumper != bumperR2Prev) {
                     bumperR2Prev = gamepad2.right_bumper;
 
                     if (bumperR2Prev) {
-                        feeder.setPosition(.001);
-                        feederState = FeederState.up;
                         feederTimer.reset();
                     }
                 }

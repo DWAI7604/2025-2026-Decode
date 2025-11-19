@@ -26,11 +26,11 @@ public class CloseThreeBallRed extends LinearOpMode {
         Intake intake = new Intake(hardwareMap);
 
         Action moveToLaunch = drive.actionBuilder(new Pose2d(-57, 44, Math.toRadians(-55)))
-                .splineTo(new Vector2d(-42, 30), Math.toRadians(-58))
+                .splineTo(new Vector2d(-42, 24), Math.toRadians(-60))
                 .build();
 
-        Action moveToPark = drive.actionBuilder(new Pose2d(-42, 30, Math.toRadians(-58)))
-                .splineTo(new Vector2d(-35, 12), Math.toRadians(-90))
+        Action moveToPark = drive.actionBuilder(new Pose2d(-42, 24, Math.toRadians(-60)))
+                .splineTo(new Vector2d(-40, 14), Math.toRadians(-90))
                 .build();
 
         waitForStart();
@@ -39,23 +39,24 @@ public class CloseThreeBallRed extends LinearOpMode {
                 new SequentialAction(
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.power(0.6, 3.0),
-                                flywheel.angle(1.0)
-                        ),
-                        flywheel.power(0.5, 2.0),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                intake.transferIn(1000),
-                                intake.intakeIn(1000)
+                                flywheel.velocity(800),
+                                flywheel.angle(1)
                         ),
                         flywheel.launch(),
                         new ParallelAction(
                                 intake.transferIn(1000),
                                 intake.intakeIn(1000)
                         ),
+                        flywheel.velocity(800),
                         flywheel.launch(),
                         new ParallelAction(
-                                flywheel.power(0.0, 0),
+                                intake.transferIn(1000),
+                                intake.intakeIn(1000)
+                        ),
+                        flywheel.velocity(800),
+                        flywheel.launch(),
+                        new ParallelAction(
+                                flywheel.velocity(0),
                                 moveToPark
                         )
                 )

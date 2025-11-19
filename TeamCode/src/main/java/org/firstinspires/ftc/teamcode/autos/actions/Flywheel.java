@@ -51,16 +51,21 @@ public class Flywheel {
 
         public Velocity(double velocity) {
             this.velocity = velocity;
+            initialized4 = false;
         }
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized4) {
                 flywheel.setVelocity(velocity);
+                initialized4 = true;
             }
 
-            packet.put("target: ", velocity);
-            packet.put("velocity: ", flywheel.getVelocity());
+            flywheel.setVelocity(velocity);
+
+            packet.put("target flywheel", velocity);
+            packet.put("velocity flywheel", flywheel.getVelocity());
+            packet.put("error flywheel", Math.abs( flywheel.getVelocity() - velocity ));
 
             return Math.abs( flywheel.getVelocity() - velocity ) < 100;
         }
@@ -82,17 +87,13 @@ public class Flywheel {
                 feeder.setPosition(.001);
                 packet.put("target: ", "0.001");
             } else {
-                feeder.setPosition(.22);
+                feeder.setPosition(.4);
                 packet.put("target: ", "0.22");
             }
 
             packet.put("position: ", feeder.getPosition());
 
-            if (timer2.milliseconds() > 2000) {
-                return false;
-            }
-
-            return true;
+            return timer2.milliseconds() < 2000;
         }
     }
 
@@ -128,4 +129,6 @@ public class Flywheel {
     public Action angle(double angle) {
         return new Angle(angle);
     }
+
+    public Action velocity(double velocity) { return new Velocity(velocity); }
 }

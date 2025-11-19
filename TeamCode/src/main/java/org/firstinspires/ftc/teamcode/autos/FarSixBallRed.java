@@ -28,14 +28,15 @@ public class FarSixBallRed extends LinearOpMode {
         Action moveToLaunch = drive.actionBuilder(new Pose2d(60, 16, 0))
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
-                .build();;
+                .build();
 
         Action moveThroughIntake = drive.actionBuilder(new Pose2d(55, 18, -0.38))
+                .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(72.0/2, 28), Math.toRadians(90)), Math.toRadians(90))
                 .lineToYConstantHeading(60)
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
-                .build();;
+                .build();
 
         Action moveToPark = drive.actionBuilder(new Pose2d(55, 18, -0.38))
                 .setReversed(true)
@@ -46,7 +47,9 @@ public class FarSixBallRed extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-
+                        moveToLaunch,
+                        moveThroughIntake,
+                        moveToPark
                 )
         );
 

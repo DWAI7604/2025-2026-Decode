@@ -3,20 +3,23 @@ package org.firstinspires.ftc.teamcode.teleops;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.PinpointLocalizer;
 import org.firstinspires.ftc.teamcode.PoseStorage;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.PanelsTelemetry;
 
-@Disabled
-@TeleOp(name="LM0TeleOp - BLUE", group="Linear OpMode")
-public class LM0TeleOpRRBlue extends LinearOpMode {
+@TeleOp(name="TeleOp - BLUE", group="Linear OpMode")
+@Configurable
+public class TeleOpBlueRR extends LinearOpMode {
+
+    public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
 
     private static double PI_CONST = 3.14159;
 
@@ -28,23 +31,19 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
     private DcMotor rightFrontDriveMotor;
     private DcMotor rightBackDriveMotor;
 
-    private DcMotor flywheel;
+    private DcMotorEx flywheel;
     private DcMotor intake;
     private Servo feeder; // this is that lil flicky switch
     private Servo angleAdjustServo;
-    private CRServo transfer; // this is that rubber band thingy
-    private Servo flipServo;
+    private DcMotor passthrough; // passthrough
 
+    private boolean passthroughOn = false;
     private double flywheelPower;
+    private double flywheelTarVel = 0;
     private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
-    private ElapsedTime intakeTimer = new ElapsedTime();
     private FeederState feederState = FeederState.down;
     private ElapsedTime feederTimer = new ElapsedTime();
-    private ElapsedTime flywheelTimer = new ElapsedTime();
-    private ElapsedTime angleTimer = new ElapsedTime();
-    private ElapsedTime flipTimer = new ElapsedTime();
-    private FlipState flipState = FlipState.up;
     private DriveState driveState = DriveState.fieldCentric;
     private boolean a1Prev = false;
     private boolean b1Prev = false;
@@ -58,7 +57,6 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
     private boolean dpadDown2Prev = false;
     private boolean dpadLeft2Prev = false;
     private boolean dpadRight2Prev = false;
-    private boolean bumperL2Prev = false;
     private boolean bumperR2Prev = false;
 
     public void runOpMode() {
@@ -71,10 +69,10 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
         rightFrontDriveMotor = hardwareMap.get(DcMotor.class, "rightFront");
         rightBackDriveMotor = hardwareMap.get(DcMotor.class, "rightBack");
 
-        leftFrontDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftBackDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightFrontDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightBackDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFrontDriveMotor.setDirection(DcMotor.Direction.FORWARD);
+        leftBackDriveMotor.setDirection(DcMotor.Direction.FORWARD);
+        rightFrontDriveMotor.setDirection(DcMotor.Direction.REVERSE);
+        rightBackDriveMotor.setDirection(DcMotor.Direction.REVERSE);
 
         leftFrontDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -82,21 +80,19 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
         rightBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //Establish hardware properties for other devices
-        flywheel = hardwareMap.get(DcMotor.class, "flywheel");
-        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
+        flywheel.setDirection(DcMotor.Direction.REVERSE);
+        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(800, 0.2, 0, 0));
         feeder = hardwareMap.get(Servo.class, "feeder");
-        transfer = hardwareMap.get(CRServo.class, "transfer");
+        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
+        passthrough.setDirection(DcMotor.Direction.REVERSE);
+        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         intake = hardwareMap.get(DcMotor.class, "intake");
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
-        flipServo = hardwareMap.get(Servo.class, "flap");
 
         waitForStart();
 
-        intakeTimer.reset();
         feederTimer.reset();
-        flywheelTimer.reset();
-        angleTimer.reset();
-        flipTimer.reset();
 
         while (opModeIsActive()) {
 
@@ -118,6 +114,7 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
 
                 if (b2Prev) { // OFF
                     flywheelPower = 0.00;
+                    flywheelTarVel = 0;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.a != a2Prev) {
@@ -125,6 +122,7 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
 
                 if (a2Prev) { // CLOSE
                     flywheelPower = 0.525;
+                    flywheelTarVel = 1000;
                     angleAdjust = 1.0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
@@ -134,7 +132,8 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
 
                 if (x2Prev) { // MEDIUM
                     flywheelPower = 0.60;
-                    angleAdjust = 0.6;
+                    flywheelTarVel = 1400;
+                    angleAdjust = 0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -143,7 +142,8 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
 
                 if (y2Prev) { // FAR
                     flywheelPower = 0.725;
-                    angleAdjust = 0.15;
+                    flywheelTarVel = 1580;
+                    angleAdjust = 0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -154,6 +154,7 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
 
                 if (dpadUp2Prev) {
                     flywheelPower += 0.025;
+                    flywheelTarVel += 10;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.dpad_down != dpadDown2Prev) {
@@ -161,30 +162,46 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
 
                 if (dpadDown2Prev) {
                     flywheelPower -= 0.025;
+                    flywheelTarVel -= 10;
                     updateFlywheel = true;
                 }
             }
 
             if (updateFlywheel) {
-                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
-                flywheel.setPower(flywheelPower);
+//                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
+//                flywheel.setPower(flywheelPower);
+
+                flywheel.setVelocity(flywheelTarVel);
+            }
+
+            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) < 50) {
+                gamepad2.rumble(0.5, 0.5, 50);
+                telemetry.addData("rumble: ", "is rumbling");
             }
 
             // ===== FEEDER FLICKING =====
             /*\
              * right bumper will flick the ball up into the flywheel
             \*/
-            if (feederTimer.milliseconds() > 150) {
+
+            if (feederTimer.milliseconds() < 50) {
+                passthrough.setPower(-0.5);
+                passthroughOn = false;
+            } else if (feederTimer.milliseconds() < 250) {
+                feeder.setPosition(.001);
+                feederState = FeederState.up;
+                passthrough.setPower(0);
+            }
+
+            if (feederTimer.milliseconds() > 250) {
 
                 if (feederState == FeederState.up) {
-                    feeder.setPosition(.22);
+                    feeder.setPosition(0.4);
                     feederState = FeederState.down;
                 } else if (gamepad2.right_bumper != bumperR2Prev) {
                     bumperR2Prev = gamepad2.right_bumper;
 
                     if (bumperR2Prev) {
-                        feeder.setPosition(.001);
-                        feederState = FeederState.up;
                         feederTimer.reset();
                     }
                 }
@@ -226,18 +243,25 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
 
             }
 
-            // ===== TRANSFER INTO ROBOT =====
+            // ===== PASSTHROUGH =====
             /*\
              * dpad up brings it into robot
              * dpad right pauses it
              * dpad down rejects the artifact
             \*/
             if (gamepad1.dpad_up) {
-                transfer.setPower(1);
+                passthrough.setPower(0.5);
+                passthroughOn = true;
             } else if (gamepad1.dpad_right) {
-                transfer.setPower(0);
+                passthrough.setPower(0);
+                passthroughOn = false;
             } else if (gamepad1.dpad_down) {
-                transfer.setPower(-1);
+                passthrough.setPower(-0.5);
+                passthroughOn = false;
+            }
+
+            if (passthroughOn) {
+                gamepad1.rumble(0.5, 0.5, 50);
             }
 
             // ===== ADJUST ANGLE OF FLYWHEEL =====
@@ -251,7 +275,6 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
 
                 if (dpadLeft2Prev) {
                     angleAdjust += 0.05;
-                    angleTimer.reset();
                     updateAngleOfFlywheel = true;
                 }
             } else if (gamepad2.dpad_right != dpadRight2Prev) {
@@ -259,7 +282,6 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
 
                 if (dpadRight2Prev) {
                     angleAdjust -= 0.05;
-                    angleTimer.reset();
                     updateAngleOfFlywheel = true;
                 }
             }
@@ -268,24 +290,6 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
 
                 angleAdjustServo.setPosition(angleAdjust);
             }
-
-//            // ===== FLIP THAT INTERNAL FLAP =====
-//            /*\
-//             * left bumper toggles it
-//            \*/
-//            if (gamepad2.left_bumper != bumperL2Prev) {
-//                bumperL2Prev = gamepad2.left_bumper;
-//
-//                if (bumperL2Prev) {
-//                    if (flipState == FlipState.down) { // move up
-//                        flipState = FlipState.up;
-//                        flipServo.setPosition(0.0);
-//                    } else {
-//                        flipState = FlipState.down;
-//                        flipServo.setPosition(0.1);
-//                    }
-//                }
-//            }
 
             // ===== RESET POSITION OF ROBOT =====
             if (gamepad1.left_bumper && gamepad1.right_bumper) { // 30, 9
@@ -327,10 +331,15 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
             telemetry.addData("Power", flywheelPower);
             telemetry.addData("heading", pose.heading.toDouble());
             telemetry.addData("angle of flywheel", angleAdjust);
-            telemetry.addData("flipServo: ", flipState);
+            telemetry.addData("velocity of flywheel", flywheel.getVelocity());
+            telemetry.addData("TARVEL of flywheel", flywheelTarVel);
             telemetry.addData("x", pose.position.x);
             telemetry.addData("y", pose.position.y);
             telemetry.update();
+
+            panelsTelemetry.getTelemetry().addData("flywheel velocity", flywheel.getVelocity());
+            panelsTelemetry.getTelemetry().addData("flywheel target", flywheelTarVel);
+            panelsTelemetry.getTelemetry().update();
         }
     }
 
@@ -341,7 +350,7 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
         double rightBackPower;
 
         double heading = pose.heading.toDouble();
-        heading = heading + PI_CONST / 2.0; // adjusted for (hopefully) red's POV
+        heading = heading + PI_CONST / 2.0; // adjusted for (hopefully) blue's POV
         double yaw = 0;
         double axial = 0;
         double lateral = 0;
@@ -361,17 +370,12 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
             lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
         }
 
-//        telemetry.addData("controller", String.format("%.2f : %.2f : %.2f", axial, lateral, yaw));
-
         double denominator = Math.max(Math.abs(axial) + Math.abs(lateral) + Math.abs(yaw), 1);
 
         leftFrontPower  = (axial + lateral + yaw) / denominator;
         leftBackPower   = (axial - lateral + yaw) / denominator;
         rightFrontPower = (axial - lateral - yaw) / denominator;
         rightBackPower  = (axial + lateral - yaw) / denominator;
-
-//        telemetry.addData("motors", String.format("%.2f : %.2f : %.2f : %.2f",
-//                leftFrontPower, leftBackPower, rightFrontPower, rightBackPower));
 
         leftFrontDriveMotor.setPower(leftFrontPower);
         leftBackDriveMotor.setPower(leftBackPower);
@@ -419,10 +423,6 @@ public class LM0TeleOpRRBlue extends LinearOpMode {
     }
 
     enum FeederState {
-        up, down
-    }
-
-    enum FlipState {
         up, down
     }
 }

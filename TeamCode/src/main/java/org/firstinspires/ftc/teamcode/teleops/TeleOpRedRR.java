@@ -377,12 +377,24 @@ public class TeleOpRedRR extends LinearOpMode {
         rightFrontPower = (axial - lateral - yaw) / denominator;
         rightBackPower  = (axial + lateral - yaw) / denominator;
 
+        // Fine-control scaler: more left trigger press -> slower robot
+        // Assumption: user wants the trigger to reduce speed significantly but not disable it.
+        // Map trigger [0..1] to scaler roughly [1.0..0.2], then clamp to [0.15, 1.0].
+        double speedScaler = 1.0 - 0.8 * gamepad1.left_trigger; // full trigger -> ~0.2
+        speedScaler = Math.max(0.15, Math.min(speedScaler, 1.0));
+
+        leftFrontPower  *= speedScaler;
+        leftBackPower   *= speedScaler;
+        rightFrontPower *= speedScaler;
+        rightBackPower  *= speedScaler;
+
         leftFrontDriveMotor.setPower(leftFrontPower);
         leftBackDriveMotor.setPower(leftBackPower);
         rightFrontDriveMotor.setPower(rightFrontPower);
         rightBackDriveMotor.setPower(rightBackPower);
 
         telemetry.addData("heading", heading);
+        telemetry.addData("speedScaler", speedScaler);
     } // updates motors according to gamepad + locateGoal
 
     public double locateGoal () { // returns the yaw value so that the robot turns to the RED goal

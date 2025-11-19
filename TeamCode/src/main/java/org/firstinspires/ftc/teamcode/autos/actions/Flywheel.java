@@ -66,6 +66,7 @@ public class Flywheel {
             packet.put("target flywheel", velocity);
             packet.put("velocity flywheel", flywheel.getVelocity());
             packet.put("error flywheel", Math.abs( flywheel.getVelocity() - velocity ));
+            packet.put("mode", "velocity");
 
             return Math.abs( flywheel.getVelocity() - velocity ) < 100;
         }
@@ -82,6 +83,7 @@ public class Flywheel {
                 timer2.reset();
                 feeder.setPosition(.001);
             }
+            packet.put("mode", "launch");
 
             if (timer2.milliseconds() < 1000) {
                 feeder.setPosition(.001);

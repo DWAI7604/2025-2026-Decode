@@ -26,6 +26,11 @@ public class TeleOpRedRR extends LinearOpMode {
     private PinpointLocalizer localizer;
     private Pose2d pose;
 
+    public static double DOWN_POSITION_FEEDER = 0.67;
+    public static double UP_POSITION_FEEDER = 0.24;
+
+    public static double FEEDER_DELAY = 300;
+
     private DcMotor leftFrontDriveMotor;
     private DcMotor leftBackDriveMotor;
     private DcMotor rightFrontDriveMotor;
@@ -82,6 +87,7 @@ public class TeleOpRedRR extends LinearOpMode {
         //Establish hardware properties for other devices
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
         flywheel.setDirection(DcMotor.Direction.REVERSE);
+        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(800, 0.2, 0, 0));
         feeder = hardwareMap.get(Servo.class, "feeder");
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
@@ -187,16 +193,18 @@ public class TeleOpRedRR extends LinearOpMode {
             if (feederTimer.milliseconds() < 50) {
                 passthrough.setPower(-0.5);
                 passthroughOn = false;
-            } else if (feederTimer.milliseconds() < 250) {
-                feeder.setPosition(.001);
+            } else if (feederTimer.milliseconds() < FEEDER_DELAY) {
+                feeder.setPosition(UP_POSITION_FEEDER);
                 feederState = FeederState.up;
                 passthrough.setPower(0);
             }
 
-            if (feederTimer.milliseconds() > 250) {
+
+
+            if (feederTimer.milliseconds() > FEEDER_DELAY) {
 
                 if (feederState == FeederState.up) {
-                    feeder.setPosition(0.4);
+                    feeder.setPosition(DOWN_POSITION_FEEDER);
                     feederState = FeederState.down;
                 } else if (gamepad2.right_bumper != bumperR2Prev) {
                     bumperR2Prev = gamepad2.right_bumper;
@@ -339,6 +347,7 @@ public class TeleOpRedRR extends LinearOpMode {
 
             panelsTelemetry.getTelemetry().addData("flywheel velocity", flywheel.getVelocity());
             panelsTelemetry.getTelemetry().addData("flywheel target", flywheelTarVel);
+            panelsTelemetry.getTelemetry().addData("feeder position", feeder.getPosition());
             panelsTelemetry.getTelemetry().update();
         }
     }

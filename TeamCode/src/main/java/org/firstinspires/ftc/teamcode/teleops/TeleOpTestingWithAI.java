@@ -15,6 +15,9 @@ import org.firstinspires.ftc.teamcode.PoseStorage;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+@Disabled
 @TeleOp(name="TeleOp - Testing New", group="Linear OpMode")
 @Configurable
 public class TeleOpTestingWithAI extends LinearOpMode {

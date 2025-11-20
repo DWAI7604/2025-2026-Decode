@@ -82,6 +82,7 @@ public class TeleOpBlueRR extends LinearOpMode {
         //Establish hardware properties for other devices
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
         flywheel.setDirection(DcMotor.Direction.REVERSE);
+        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(800, 0.2, 0, 0));
         feeder = hardwareMap.get(Servo.class, "feeder");
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
@@ -188,15 +189,15 @@ public class TeleOpBlueRR extends LinearOpMode {
                 passthrough.setPower(-0.5);
                 passthroughOn = false;
             } else if (feederTimer.milliseconds() < 250) {
-                feeder.setPosition(.001);
+                feeder.setPosition(.24);
                 feederState = FeederState.up;
                 passthrough.setPower(0);
             }
 
-            if (feederTimer.milliseconds() > 250) {
+            if (feederTimer.milliseconds() > 300) {
 
                 if (feederState == FeederState.up) {
-                    feeder.setPosition(0.4);
+                    feeder.setPosition(0.67);
                     feederState = FeederState.down;
                 } else if (gamepad2.right_bumper != bumperR2Prev) {
                     bumperR2Prev = gamepad2.right_bumper;
@@ -376,6 +377,17 @@ public class TeleOpBlueRR extends LinearOpMode {
         leftBackPower   = (axial - lateral + yaw) / denominator;
         rightFrontPower = (axial - lateral - yaw) / denominator;
         rightBackPower  = (axial + lateral - yaw) / denominator;
+
+        // Fine-control scaler: more left trigger press -> slower robot
+        // Assumption: user wants the trigger to reduce speed significantly but not disable it.
+        // Map trigger [0..1] to scaler roughly [1.0..0.2], then clamp to [0.15, 1.0].
+        double speedScaler = 1.0 - 0.8 * gamepad1.left_trigger; // full trigger -> ~0.2
+        speedScaler = Math.max(0.15, Math.min(speedScaler, 1.0));
+
+        leftFrontPower  *= speedScaler;
+        leftBackPower   *= speedScaler;
+        rightFrontPower *= speedScaler;
+        rightBackPower  *= speedScaler;
 
         leftFrontDriveMotor.setPower(leftFrontPower);
         leftBackDriveMotor.setPower(leftBackPower);

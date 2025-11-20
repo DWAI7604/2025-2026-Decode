@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.autos.actions;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -18,6 +19,7 @@ public class Flywheel {
     public Flywheel(HardwareMap hardwareMap) {
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         feeder = hardwareMap.get(Servo.class, "feeder");
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
     }
@@ -63,12 +65,18 @@ public class Flywheel {
 
             flywheel.setVelocity(velocity);
 
-            packet.put("target flywheel", velocity);
-            packet.put("velocity flywheel", flywheel.getVelocity());
-            packet.put("error flywheel", Math.abs( flywheel.getVelocity() - velocity ));
-            packet.put("mode", "velocity");
+            packet.put("1.target flywheel", velocity);
+            packet.put("2.velocity flywheel", flywheel.getVelocity());
+            packet.put("3.error flywheel", Math.abs( flywheel.getVelocity() - velocity ));
+//            packet.put("mode", "velocity");
+            packet.put("4.OUTPUT", Math.abs( flywheel.getVelocity() - velocity ) > 15);
 
-            return Math.abs( flywheel.getVelocity() - velocity ) < 100;
+            if (Math.abs( flywheel.getVelocity() - velocity ) > 15) {
+                return true;
+            } else {
+                initialized4 = false;
+                return false;
+            }
         }
     }
 
@@ -81,21 +89,48 @@ public class Flywheel {
             if (!initialized2) {
                 initialized2 = true;
                 timer2.reset();
-                feeder.setPosition(.001);
+                feeder.setPosition(.2);
             }
             packet.put("mode", "launch");
 
-            if (timer2.milliseconds() < 1000) {
-                feeder.setPosition(.001);
-                packet.put("target: ", "0.001");
+            if (timer2.milliseconds() < 400) {
+                feeder.setPosition(.24);
+                packet.put("target: ", "0.24");
             } else {
-                feeder.setPosition(.4);
-                packet.put("target: ", "0.22");
+                feeder.setPosition(.67);
+                packet.put("target: ", "0.67");
             }
 
             packet.put("position: ", feeder.getPosition());
 
-            return timer2.milliseconds() < 2000;
+            return timer2.milliseconds() < 700;
+        }
+    }
+
+    public class PrepLaunch implements Action {
+        private boolean initialized6 = false;
+        private ElapsedTime timer6 = new ElapsedTime();
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!initialized6) {
+                initialized6 = true;
+                timer6.reset();
+                feeder.setPosition(.4);
+            }
+            packet.put("mode", "prep-launch");
+
+            if (timer6.milliseconds() < 400) {
+                feeder.setPosition(.65);
+                packet.put("target: ", "0.65");
+            } else {
+                feeder.setPosition(.67);
+                packet.put("target: ", "0.67");
+            }
+
+            packet.put("position: ", feeder.getPosition());
+
+            return timer6.milliseconds() < 700;
         }
     }
 
@@ -126,6 +161,10 @@ public class Flywheel {
 
     public Action launch() {
         return new Launch();
+    }
+
+    public Action prepLaunch() {
+        return new PrepLaunch();
     }
 
     public Action angle(double angle) {

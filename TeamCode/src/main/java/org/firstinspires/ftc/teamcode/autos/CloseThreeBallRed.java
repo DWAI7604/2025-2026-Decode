@@ -68,17 +68,20 @@ public class CloseThreeBallRed extends LinearOpMode {
                                 flywheel.prepLaunch()
                         ),
                         flywheel.launch(),
-                        new ParallelAction(
-                                intake.transferIn(400),
-                                intake.intakeIn(400),
-                                flywheel.velocity(1000)
-                        ),
                         flywheel.launch(),
                         new ParallelAction(
                                 intake.transferIn(400),
                                 intake.intakeIn(400),
                                 flywheel.velocity(1000)
                         ),
+                        flywheel.launch(),
+                        flywheel.launch(),
+                        new ParallelAction(
+                                intake.transferIn(500),
+                                intake.intakeIn(500),
+                                flywheel.velocity(1000)
+                        ),
+                        flywheel.launch(),
                         flywheel.launch(),
                         new ParallelAction(
                                 flywheel.velocity(0),

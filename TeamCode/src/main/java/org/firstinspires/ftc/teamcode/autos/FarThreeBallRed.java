@@ -21,11 +21,11 @@ public class FarThreeBallRed extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(57, 12, -0.38));
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(63.5, 15 / 2.0, 0));
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);
 
-        Action moveToLaunch = drive.actionBuilder(new Pose2d(60, 16, 0))
+        Action moveToLaunch = drive.actionBuilder(new Pose2d(63.5, 15 / 2.0, 0))
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
                 .build();
@@ -66,8 +66,10 @@ public class FarThreeBallRed extends LinearOpMode {
                         new ParallelAction(
                                 moveToLaunch,
                                 flywheel.velocity(1580),
-                                flywheel.angle(0)
+                                flywheel.angle(0),
+                                flywheel.prepLaunch()
                         ),
+                        flywheel.launch(),
                         flywheel.launch(),
                         new ParallelAction(
                                 intake.transferIn(400),
@@ -75,11 +77,13 @@ public class FarThreeBallRed extends LinearOpMode {
                                 flywheel.velocity(1580)
                         ),
                         flywheel.launch(),
+                        flywheel.launch(),
                         new ParallelAction(
-                                intake.transferIn(400),
-                                intake.intakeIn(400),
+                                intake.transferIn(500),
+                                intake.intakeIn(500),
                                 flywheel.velocity(1580)
                         ),
+                        flywheel.launch(),
                         flywheel.launch(),
                         new ParallelAction(
                                 flywheel.velocity(0),

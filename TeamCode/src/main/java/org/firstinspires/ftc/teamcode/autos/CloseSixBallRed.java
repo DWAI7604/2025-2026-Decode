@@ -29,11 +29,11 @@ public class CloseSixBallRed extends LinearOpMode {
                 .splineTo(new Vector2d(-46, 24), Math.toRadians(-65))
                 .build();
 
-        Action moveThroughIntake = drive.actionBuilder(new Pose2d(-44, 24, Math.toRadians(-65)))
+        Action moveThroughIntake = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-65)))
                 .splineTo(new Vector2d(-70.0/6, 24), Math.toRadians(90))
-                .lineToYConstantHeading(52)
+                .lineToYConstantHeading(51.5)
                 .setReversed(true)
-                .splineTo(new Vector2d(-44, 24), Math.toRadians(-65 + 180))
+                .splineTo(new Vector2d(-46, 24), Math.toRadians(-65 + 180))
                 .build();
 
         Action moveToPark = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-65)))
@@ -75,28 +75,32 @@ public class CloseSixBallRed extends LinearOpMode {
                                 flywheel.prepLaunch()
                         ),
                         flywheel.launch(),
-                        new ParallelAction(
-                                intake.transferIn(400),
-                                intake.intakeIn(400),
-                                flywheel.velocity(1000)
-                        ),
                         flywheel.launch(),
                         new ParallelAction(
                                 intake.transferIn(400),
                                 intake.intakeIn(400),
                                 flywheel.velocity(1000)
                         ),
+                        flywheel.launch(),
+                        flywheel.launch(),
+                        new ParallelAction(
+                                intake.transferIn(500),
+                                intake.intakeIn(500),
+                                flywheel.velocity(1000)
+                        ),
+                        flywheel.launch(),
                         flywheel.launch(),
 
 
                         new ParallelAction(
                                 moveThroughIntake,
-                                intake.transferIn(2500),
-                                intake.intakeIn(3500),
+                                intake.transferIn(3000),
+                                intake.intakeIn(5700),
                                 flywheel.velocity(1000)
                         ),
 
 
+                        flywheel.launch(),
                         flywheel.launch(),
                         new ParallelAction(
                                 intake.transferIn(400),
@@ -104,11 +108,13 @@ public class CloseSixBallRed extends LinearOpMode {
                                 flywheel.velocity(1000)
                         ),
                         flywheel.launch(),
+                        flywheel.launch(),
                         new ParallelAction(
-                                intake.transferIn(400),
-                                intake.intakeIn(400),
+                                intake.transferIn(500),
+                                intake.intakeIn(500),
                                 flywheel.velocity(1000)
                         ),
+                        flywheel.launch(),
                         flywheel.launch(),
                         new ParallelAction(
                                 flywheel.velocity(0),

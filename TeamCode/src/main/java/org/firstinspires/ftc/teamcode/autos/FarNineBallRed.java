@@ -16,6 +16,9 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
 import org.firstinspires.ftc.teamcode.autos.actions.Intake;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+@Disabled
 @Autonomous(name="FarNineBall - RED", group="Robot")
 public class FarNineBallRed extends LinearOpMode {
 

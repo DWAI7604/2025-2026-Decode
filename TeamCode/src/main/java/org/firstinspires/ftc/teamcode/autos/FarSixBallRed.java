@@ -21,11 +21,11 @@ public class FarSixBallRed extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(57, 12, -0.38));
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(60, 16, 0));
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);
 
-        Action moveToLaunch = drive.actionBuilder(new Pose2d(60, 16, 0))
+        Action moveToLaunch = drive.actionBuilder(new Pose2d(63.5, 15 / 2.0, 0))
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
                 .build();
@@ -43,13 +43,86 @@ public class FarSixBallRed extends LinearOpMode {
                 .splineToLinearHeading(new Pose2d(new Vector2d(60, 38), Math.toRadians(-90)), 0)
                 .build();
 
+        double delay = 0; // measured in seconds
+        boolean dpadUpPrev = false;
+        boolean dpadDownPrev = false;
+
+        while(opModeInInit()) {
+            if (gamepad2.dpad_up != dpadUpPrev) {
+                dpadUpPrev = gamepad2.dpad_up;
+
+                if (dpadUpPrev) {
+                    delay += 0.05;
+                }
+            } else if (gamepad2.dpad_down != dpadDownPrev) {
+                dpadDownPrev = gamepad2.dpad_right;
+
+                if (dpadDownPrev) {
+                    delay -= 0.05;
+                }
+            }
+
+            telemetry.addData("delay: ", delay);
+            telemetry.update();
+        }
+
         waitForStart();
 
         Actions.runBlocking(
                 new SequentialAction(
-                        moveToLaunch,
-                        moveThroughIntake,
-                        moveToPark
+                        new SleepAction(delay),
+                        new ParallelAction(
+                                moveToLaunch,
+                                flywheel.velocity(1580),
+                                flywheel.angle(0),
+                                flywheel.prepLaunch()
+                        ),
+                        flywheel.launch(),
+                        flywheel.launch(),
+                        new ParallelAction(
+                                intake.transferIn(400),
+                                intake.intakeIn(400),
+                                flywheel.velocity(1580)
+                        ),
+                        flywheel.launch(),
+                        flywheel.launch(),
+                        new ParallelAction(
+                                intake.transferIn(500),
+                                intake.intakeIn(500),
+                                flywheel.velocity(1580)
+                        ),
+                        flywheel.launch(),
+                        flywheel.launch(),
+
+
+                        new ParallelAction(
+                                moveThroughIntake,
+                                intake.transferIn(3000),
+                                intake.intakeIn(4700),
+                                flywheel.velocity(1000)
+                        ),
+
+
+                        flywheel.launch(),
+                        flywheel.launch(),
+                        new ParallelAction(
+                                intake.transferIn(400),
+                                intake.intakeIn(400),
+                                flywheel.velocity(1580)
+                        ),
+                        flywheel.launch(),
+                        flywheel.launch(),
+                        new ParallelAction(
+                                intake.transferIn(500),
+                                intake.intakeIn(500),
+                                flywheel.velocity(1580)
+                        ),
+                        flywheel.launch(),
+                        flywheel.launch(),
+                        new ParallelAction(
+                                flywheel.velocity(0),
+                                moveToPark
+                        )
                 )
         );
 

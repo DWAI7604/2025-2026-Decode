@@ -25,14 +25,16 @@ public class FarThreeBallBlue extends LinearOpMode {
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);
 
-        Action moveToLaunch = drive.actionBuilder(new Pose2d(63.5, -(15 / 2.0), 0))
+        Action moveToLaunch = drive.actionBuilder(new Pose2d(63.5, -15 / 2.0, 0))
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(55, -18), 0.38), 0)
                 .build();
 
         Action moveToPark = drive.actionBuilder(new Pose2d(55, -18, 0.38))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(60, -38), Math.toRadians(90)), 0)
+                .splineToLinearHeading(new Pose2d(new Vector2d(63, -38), Math.toRadians(-90)), 0)
+                .waitSeconds(0.01)
+                .lineToYConstantHeading(-60)
                 .build();
 
         double delay = 0; // measured in seconds
@@ -87,7 +89,9 @@ public class FarThreeBallBlue extends LinearOpMode {
                         flywheel.launch(),
                         new ParallelAction(
                                 flywheel.velocity(0),
-                                moveToPark
+                                moveToPark,
+                                intake.transferIn(2500),
+                                intake.intakeIn(4000)
                         )
                 )
         );

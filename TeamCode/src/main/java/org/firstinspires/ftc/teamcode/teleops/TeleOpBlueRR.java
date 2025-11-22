@@ -58,6 +58,7 @@ public class TeleOpBlueRR extends LinearOpMode {
     private boolean dpadLeft2Prev = false;
     private boolean dpadRight2Prev = false;
     private boolean bumperR2Prev = false;
+    private boolean triggerR1Prev = false;
 
     public void runOpMode() {
 
@@ -133,7 +134,7 @@ public class TeleOpBlueRR extends LinearOpMode {
 
                 if (x2Prev) { // MEDIUM
                     flywheelPower = 0.60;
-                    flywheelTarVel = 1400;
+                    flywheelTarVel = 1360;
                     angleAdjust = 0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
@@ -175,7 +176,7 @@ public class TeleOpBlueRR extends LinearOpMode {
                 flywheel.setVelocity(flywheelTarVel);
             }
 
-            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) < 50) {
+            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) > 20) {
                 gamepad2.rumble(0.5, 0.5, 50);
                 telemetry.addData("rumble: ", "is rumbling");
             }
@@ -259,6 +260,22 @@ public class TeleOpBlueRR extends LinearOpMode {
             } else if (gamepad1.dpad_down) {
                 passthrough.setPower(-0.5);
                 passthroughOn = false;
+            }
+
+
+
+            if ((gamepad1.right_trigger > 0.5) != triggerR1Prev) {
+                triggerR1Prev = gamepad1.right_trigger > 0.5;
+
+                if (triggerR1Prev) {
+                    if (passthroughOn) {
+                        passthrough.setPower(0);
+                        passthroughOn = false;
+                    } else {
+                        passthrough.setPower(0.5);
+                        passthroughOn = true;
+                    }
+                }
             }
 
             if (passthroughOn) {

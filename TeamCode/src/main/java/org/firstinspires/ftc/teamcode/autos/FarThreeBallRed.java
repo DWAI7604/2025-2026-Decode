@@ -15,7 +15,9 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
 import org.firstinspires.ftc.teamcode.autos.actions.Intake;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
+@Disabled
 @Autonomous(name="FarThreeBall - RED", group="Robot")
 public class FarThreeBallRed extends LinearOpMode {
 
@@ -32,7 +34,9 @@ public class FarThreeBallRed extends LinearOpMode {
 
         Action moveToPark = drive.actionBuilder(new Pose2d(55, 18, -0.38))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(60, 38), Math.toRadians(-90)), 0)
+                .splineToLinearHeading(new Pose2d(new Vector2d(63, 38), Math.toRadians(90)), 0)
+                .waitSeconds(0.01)
+                .lineToYConstantHeading(60)
                 .build();
 
         double delay = 0; // measured in seconds
@@ -87,7 +91,9 @@ public class FarThreeBallRed extends LinearOpMode {
                         flywheel.launch(),
                         new ParallelAction(
                                 flywheel.velocity(0),
-                                moveToPark
+                                moveToPark,
+                                intake.transferIn(2500),
+                                intake.intakeIn(4000)
                         )
                 )
         );

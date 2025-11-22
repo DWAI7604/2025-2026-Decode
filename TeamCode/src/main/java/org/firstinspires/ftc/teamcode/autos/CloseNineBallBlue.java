@@ -37,8 +37,8 @@ public class CloseNineBallBlue extends LinearOpMode {
                 .build();
 
         Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(-46, -24, Math.toRadians(65)))
-                .splineTo(new Vector2d(70.0/6 + 4, -36), Math.toRadians(-90))
-                .lineToYConstantHeading(-57)
+                .splineTo(new Vector2d(70.0/6 + 2, -33), Math.toRadians(-90))
+                .lineToYConstantHeading(-58.5)
                 .setReversed(true)
                 .splineTo(new Vector2d(-46, -24), Math.toRadians(-(-65 + 180)))
                 .build();
@@ -77,7 +77,7 @@ public class CloseNineBallBlue extends LinearOpMode {
                         new SleepAction(delay),
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(800),
+                                flywheel.velocity(1010),
                                 flywheel.angle(1),
                                 flywheel.prepLaunch()
                         ),
@@ -85,20 +85,20 @@ public class CloseNineBallBlue extends LinearOpMode {
                         new ParallelAction(
                                 intake.transferIn(400),
                                 intake.intakeIn(400),
-                                flywheel.velocity(1000)
+                                flywheel.velocity(1010)
                         ),
                         flywheel.launch(),
                         new ParallelAction(
                                 intake.transferIn(500),
                                 intake.intakeIn(500),
-                                flywheel.velocity(1000)
+                                flywheel.velocity(1010)
                         ),
                         flywheel.launch(),
 
 
                         new ParallelAction(
                                 moveThroughIntake1,
-                                intake.transferIn(3000),
+                                intake.transferIn(3250),
                                 intake.intakeIn(5700),
                                 flywheel.velocity(1000)
                         ),
@@ -120,7 +120,7 @@ public class CloseNineBallBlue extends LinearOpMode {
 
                         new ParallelAction(
                                 moveThroughIntake2,
-                                intake.transferIn(3000),
+                                intake.transferIn(3250),
                                 intake.intakeIn(5700),
                                 flywheel.velocity(1000)
                         ),

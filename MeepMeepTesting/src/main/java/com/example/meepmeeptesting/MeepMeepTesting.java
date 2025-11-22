@@ -15,7 +15,7 @@ public class MeepMeepTesting {
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 16)
                 .build();
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(63.5, 15 / 2.0, Math.toRadians(180)))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(63.5, 15 / 2.0, 0))
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
                 .waitSeconds(1) // LAUNCH 3 BALLS
@@ -24,15 +24,17 @@ public class MeepMeepTesting {
                 .lineToYConstantHeading(60)
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
+//                .waitSeconds(1) // LAUNCH 3 BALLS
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6, 28), Math.toRadians(90)), Math.toRadians(90))
+//                .lineToYConstantHeading(60)
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
                 .waitSeconds(1) // LAUNCH 3 BALLS
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6, 28), Math.toRadians(90)), Math.toRadians(90))
+                .splineToLinearHeading(new Pose2d(new Vector2d(60, 38), Math.toRadians(90)), 0)
+                        .waitSeconds(0.01)
                 .lineToYConstantHeading(60)
-                .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
-                .waitSeconds(1) // LAUNCH 3 BALLS
-                .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(60, 38), Math.toRadians(-90)), 0)
                 .build());
 
 //        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-61, 44, Math.toRadians(-55)))

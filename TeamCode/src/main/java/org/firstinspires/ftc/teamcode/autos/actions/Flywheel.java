@@ -50,6 +50,7 @@ public class Flywheel {
     public class Velocity implements Action {
         private boolean initialized4 = false;
         double velocity;
+        int numOfCorrect = 0;
 
         public Velocity(double velocity) {
             this.velocity = velocity;
@@ -72,11 +73,16 @@ public class Flywheel {
             packet.put("4.OUTPUT", Math.abs( flywheel.getVelocity() - velocity ) > 15);
 
             if (Math.abs( flywheel.getVelocity() - velocity ) > 15) {
-                return true;
+                numOfCorrect = 0;
             } else {
+                numOfCorrect++;
+            }
+
+            if (numOfCorrect >= 3) {
                 initialized4 = false;
                 return false;
             }
+            return true;
         }
     }
 

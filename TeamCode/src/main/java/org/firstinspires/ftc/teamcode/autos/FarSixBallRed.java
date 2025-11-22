@@ -21,26 +21,26 @@ public class FarSixBallRed extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(60, 16, 0));
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(63.5, 15 / 2.0, 0));
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);
 
         Action moveToLaunch = drive.actionBuilder(new Pose2d(63.5, 15 / 2.0, 0))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
+                .splineToLinearHeading(new Pose2d(new Vector2d(57, 17), -0.38 ), 0)
                 .build();
 
-        Action moveThroughIntake = drive.actionBuilder(new Pose2d(55, 18, -0.38))
+        Action moveThroughIntake = drive.actionBuilder(new Pose2d(57, 17, -0.38))
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(72.0/2, 28), Math.toRadians(90)), Math.toRadians(90))
-                .lineToYConstantHeading(60)
+                .lineToYConstantHeading(63)
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
+                .splineToLinearHeading(new Pose2d(new Vector2d(57, 17), -0.38), 0)
                 .build();
 
-        Action moveToPark = drive.actionBuilder(new Pose2d(55, 18, -0.38))
+        Action moveToPark = drive.actionBuilder(new Pose2d(57, 17, -0.38))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(60, 38), Math.toRadians(-90)), 0)
+                .splineToLinearHeading(new Pose2d(new Vector2d(64.5, 38), Math.toRadians(90)), 0)
                 .build();
 
         double delay = 0; // measured in seconds
@@ -73,7 +73,7 @@ public class FarSixBallRed extends LinearOpMode {
                         new SleepAction(delay),
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(1580),
+                                flywheel.velocity(1540),
                                 flywheel.angle(0),
                                 flywheel.prepLaunch()
                         ),
@@ -89,7 +89,7 @@ public class FarSixBallRed extends LinearOpMode {
                         new ParallelAction(
                                 intake.transferIn(500),
                                 intake.intakeIn(500),
-                                flywheel.velocity(1580)
+                                flywheel.velocity(1540)
                         ),
                         flywheel.launch(),
                         flywheel.launch(),
@@ -97,12 +97,13 @@ public class FarSixBallRed extends LinearOpMode {
 
                         new ParallelAction(
                                 moveThroughIntake,
-                                intake.transferIn(3000),
-                                intake.intakeIn(4700),
-                                flywheel.velocity(1000)
+                                intake.transferIn(3500),
+                                intake.intakeIn(5000),
+                                flywheel.velocity(1580)
                         ),
 
 
+                        flywheel.velocity(1580),
                         flywheel.launch(),
                         flywheel.launch(),
                         new ParallelAction(
@@ -121,7 +122,9 @@ public class FarSixBallRed extends LinearOpMode {
                         flywheel.launch(),
                         new ParallelAction(
                                 flywheel.velocity(0),
-                                moveToPark
+                                moveToPark,
+                                intake.transferIn(2500),
+                                intake.intakeIn(4000)
                         )
                 )
         );

@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 //import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 //@Disabled
-@TeleOp(name="servo = 0.2", group="Linear OpMode")
+@TeleOp(name="feeder = 0.2", group="Linear OpMode")
 public class ResetServo extends LinearOpMode {
     private Servo servo;
 

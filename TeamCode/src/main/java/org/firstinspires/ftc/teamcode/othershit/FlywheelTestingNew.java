@@ -11,7 +11,8 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+@Disabled
 @TeleOp(name="FlywheelTestingNew - SINE", group="Linear OpMode")
 @Configurable
 public class FlywheelTestingNew extends LinearOpMode {

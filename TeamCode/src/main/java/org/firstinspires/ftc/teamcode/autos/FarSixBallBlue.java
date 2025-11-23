@@ -122,9 +122,7 @@ public class FarSixBallBlue extends LinearOpMode {
                         flywheel.launch(),
                         new ParallelAction(
                                 flywheel.velocity(0),
-                                moveToPark,
-                                intake.transferIn(2500),
-                                intake.intakeIn(4000)
+                                moveToPark
                         )
                 )
         );

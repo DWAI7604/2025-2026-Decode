@@ -12,36 +12,50 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
-@Disabled
 @TeleOp(name="TeleOp - NO AUTOAIM / HEADLESS", group="Linear OpMode")
 @Configurable
 public class TeleOpNoRR extends LinearOpMode {
 
     public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
 
-    public static double feederUpPosition = 0.40;
-    public static double feederTimerWait = 300;
-    public static double feederTimerDelay = 50;
+    public static double blockerPosClosed = .5;
+    public static double blockerPosOpened = .4;
+
+    public static double launchTimerDelayToIntake = 1000; //ms
+    public static double launchTimerDelayToPassthrough = 100; //ms
+
+    public static double INTAKE_POWER = 1.0;
+    public static double PASSTHROUGH_POWER = 0.5;
+
+    public static double CLOSE_VEL = 1000;
+    public static double MED_VEL = 1360;
+    public static double FAR_VEL = 1580;
+
+    public static double CLOSE_ANG = 1;
+    public static double MED_ANG = 0;
+    public static double FAR_ANG = 0;
 
     private DcMotor leftFrontDriveMotor;
     private DcMotor leftBackDriveMotor;
     private DcMotor rightFrontDriveMotor;
     private DcMotor rightBackDriveMotor;
 
-    private DcMotorEx flywheel;
     private DcMotor intake;
-    private Servo feeder; // this is that lil flicky switch
+    private DcMotor passthrough;
+    private DcMotorEx flywheel;
+    private Servo blocker;
     private Servo angleAdjustServo;
-    private DcMotor passthrough; // passthrough
 
     private double flywheelPower;
     private double flywheelTarVel = 0;
     private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
-    private FeederState feederState = FeederState.down;
-    private ElapsedTime feederTimer = new ElapsedTime();
+    private LaunchState launchState = LaunchState.down;
+    private ElapsedTime launchTimer = new ElapsedTime();
+
+    private boolean launching = false;
+
     private boolean a1Prev = false;
     private boolean b1Prev = false;
     private boolean a2Prev = false;
@@ -54,6 +68,7 @@ public class TeleOpNoRR extends LinearOpMode {
     private boolean dpadRight2Prev = false;
     private boolean bumperR2Prev = false;
 
+
     public void runOpMode() {
 
         //Establish hardware properties for drive motors
@@ -64,8 +79,8 @@ public class TeleOpNoRR extends LinearOpMode {
 
         leftFrontDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         leftBackDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightFrontDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightBackDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightFrontDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightBackDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         leftFrontDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -74,18 +89,23 @@ public class TeleOpNoRR extends LinearOpMode {
 
         //Establish hardware properties for other devices
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
-        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+//        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
         flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(800, 0.2, 0, 0));
-        feeder = hardwareMap.get(Servo.class, "feeder");
+
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
-        passthrough.setDirection(DcMotorSimple.Direction.REVERSE);
+//        passthrough.setDirection(DcMotorSimple.Direction.REVERSE);
         passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         intake = hardwareMap.get(DcMotor.class, "intake");
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        blocker = hardwareMap.get(Servo.class, "blocker");
+
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
 
         waitForStart();
 
-        feederTimer.reset();
+        launchTimer.reset();
 
         while (opModeIsActive()) {
 
@@ -112,8 +132,8 @@ public class TeleOpNoRR extends LinearOpMode {
 
                 if (a2Prev) { // CLOSE
                     flywheelPower = 0.525;
-                    flywheelTarVel = 1000;
-                    angleAdjust = 1.0;
+                    flywheelTarVel = CLOSE_VEL;
+                    angleAdjust = CLOSE_ANG;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -122,8 +142,8 @@ public class TeleOpNoRR extends LinearOpMode {
 
                 if (x2Prev) { // MEDIUM
                     flywheelPower = 0.60;
-                    flywheelTarVel = 1400;
-                    angleAdjust = 0;
+                    flywheelTarVel = MED_VEL;
+                    angleAdjust = MED_ANG;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -132,8 +152,8 @@ public class TeleOpNoRR extends LinearOpMode {
 
                 if (y2Prev) { // FAR
                     flywheelPower = 0.725;
-                    flywheelTarVel = 1580;
-                    angleAdjust = 0;
+                    flywheelTarVel = FAR_VEL;
+                    angleAdjust = FAR_ANG;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -164,36 +184,45 @@ public class TeleOpNoRR extends LinearOpMode {
                 flywheel.setVelocity(flywheelTarVel);
             }
 
-            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) < 50) {
-                gamepad2.rumble(50);
-            }
+//            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) < 50) {
+//                gamepad2.rumble(50);
+//            }
 
-            // ===== FEEDER FLICKING =====
+            // ===== LAUNCH =====
             /*\
-             * right bumper will flick the ball up into the flywheel
-             * BUT BEFORE THAT it runs the feeder on reject mode and then kills it
+             * when button pressed and held:
+             * 1.) opens the blocker
+             * 2.) runs passthrough
+             * 3.) runs intake
+             * when button released: stop passthrough + intake, close blocker
             \*/
 
-            if (feederTimer.milliseconds() < feederTimerDelay) {
-                passthrough.setPower(-0.5);
-            } else if (feederTimer.milliseconds() < feederTimerWait) {
-                feeder.setPosition(.001);
-                feederState = FeederState.up;
-                passthrough.setPower(0);
+            if (gamepad2.right_bumper != bumperR2Prev) {
+                bumperR2Prev = gamepad2.right_bumper;
+
+                if (bumperR2Prev) {
+                    launchTimer.reset();
+                    launching = true;
+                } else {
+                    intake.setPower(0);
+                    passthrough.setPower(0);
+                    blocker.setPosition(blockerPosClosed);
+                    launching = false;
+                }
             }
 
-            if (feederTimer.milliseconds() > feederTimerWait) {
+            if (launching) {
 
-                if (feederState == FeederState.up) {
-                    feeder.setPosition(feederUpPosition); // 0.4 currently
-                    feederState = FeederState.down;
-                } else if (gamepad2.right_bumper != bumperR2Prev) {
-                    bumperR2Prev = gamepad2.right_bumper;
+                blocker.setPosition(blockerPosOpened);
 
-                    if (bumperR2Prev) {
-                        feederTimer.reset();
-                    }
+                if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
+                    passthrough.setPower(PASSTHROUGH_POWER);
                 }
+
+                if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
+                    intake.setPower(INTAKE_POWER);
+                }
+
             }
 
             // ===== INTAKE STATE CHANGING =====
@@ -205,12 +234,12 @@ public class TeleOpNoRR extends LinearOpMode {
 
                 a1Prev = gamepad1.a;
 
-                if (a1Prev) { // this code only runs when the a button is pressed, not released
+                if (a1Prev) {
                     if (intakeState == IntakeState.on) {
                         intake.setPower(0);
                         intakeState = IntakeState.off;
                     } else {
-                        intake.setPower(1);
+                        intake.setPower(INTAKE_POWER);
                         intakeState = IntakeState.on;
                     }
                 }
@@ -219,12 +248,12 @@ public class TeleOpNoRR extends LinearOpMode {
 
                 b1Prev = gamepad1.b;
 
-                if (b1Prev) { // this code only runs when the a button is pressed, not released
+                if (b1Prev) {
                     if (intakeState == IntakeState.reject) {
                         intake.setPower(0);
                         intakeState = IntakeState.off;
                     } else {
-                        intake.setPower(-1);
+                        intake.setPower(-INTAKE_POWER);
                         intakeState = IntakeState.reject;
                     }
                 }
@@ -239,11 +268,11 @@ public class TeleOpNoRR extends LinearOpMode {
              * dpad down rejects the artifact
             \*/
             if (gamepad1.dpad_up) {
-                passthrough.setPower(0.5);
+                passthrough.setPower(PASSTHROUGH_POWER);
             } else if (gamepad1.dpad_right) {
                 passthrough.setPower(0);
             } else if (gamepad1.dpad_down) {
-                passthrough.setPower(-0.5);
+                passthrough.setPower(-PASSTHROUGH_POWER);
             }
 
             // ===== ADJUST ANGLE OF FLYWHEEL =====
@@ -304,6 +333,14 @@ public class TeleOpNoRR extends LinearOpMode {
         rightFrontPower = (axial - lateral - yaw) / denominator;
         rightBackPower  = (axial + lateral - yaw) / denominator;
 
+        double speedScaler = 1.0 - 0.8 * gamepad1.left_trigger; // full trigger -> ~0.2
+        speedScaler = Math.max(0.15, Math.min(speedScaler, 1.0));
+
+        leftFrontPower  *= speedScaler;
+        leftBackPower   *= speedScaler;
+        rightFrontPower *= speedScaler;
+        rightBackPower  *= speedScaler;
+
         leftFrontDriveMotor.setPower(leftFrontPower);
         leftBackDriveMotor.setPower(leftBackPower);
         rightFrontDriveMotor.setPower(rightFrontPower);
@@ -314,7 +351,7 @@ public class TeleOpNoRR extends LinearOpMode {
         off, on, reject
     }
 
-    enum FeederState {
+    enum LaunchState {
         up, down
     }
 }

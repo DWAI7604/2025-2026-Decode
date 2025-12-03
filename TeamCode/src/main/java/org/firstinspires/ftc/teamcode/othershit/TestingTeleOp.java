@@ -7,7 +7,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
+@Disabled
 @TeleOp
 public class TestingTeleOp extends LinearOpMode {
 

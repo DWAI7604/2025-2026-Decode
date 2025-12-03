@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import com.bylazar.configurables.annotations.Configurable;
@@ -19,8 +20,8 @@ public class TeleOpNoRR extends LinearOpMode {
 
     public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
 
-    public static double blockerPosClosed = .5;
-    public static double blockerPosOpened = .4;
+    public static double blockerPosClosed = .59;
+    public static double blockerPosOpened = .78;
 
     public static double launchTimerDelayToIntake = 1000; //ms
     public static double launchTimerDelayToPassthrough = 100; //ms
@@ -46,6 +47,7 @@ public class TeleOpNoRR extends LinearOpMode {
     private DcMotorEx flywheel;
     private Servo blocker;
     private Servo angleAdjustServo;
+    private TouchSensor limitSwitch;
 
     private double flywheelPower;
     private double flywheelTarVel = 0;
@@ -79,8 +81,8 @@ public class TeleOpNoRR extends LinearOpMode {
 
         leftFrontDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         leftBackDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightFrontDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightBackDriveMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightFrontDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightBackDriveMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         leftFrontDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -89,11 +91,12 @@ public class TeleOpNoRR extends LinearOpMode {
 
         //Establish hardware properties for other devices
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
-//        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(800, 0.2, 0, 0));
 
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
-//        passthrough.setDirection(DcMotorSimple.Direction.REVERSE);
+        passthrough.setDirection(DcMotorSimple.Direction.REVERSE);
         passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         intake = hardwareMap.get(DcMotor.class, "intake");
@@ -103,11 +106,15 @@ public class TeleOpNoRR extends LinearOpMode {
 
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
 
+        limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
+
         waitForStart();
 
         launchTimer.reset();
 
         while (opModeIsActive()) {
+
+            boolean limitSwitchIsPressed = !limitSwitch.isPressed(); // because the limit switch is wired backwards
 
             // ===== FLYWHEEL POWER & PRESETS =====
             /*\
@@ -184,9 +191,10 @@ public class TeleOpNoRR extends LinearOpMode {
                 flywheel.setVelocity(flywheelTarVel);
             }
 
-//            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) < 50) {
-//                gamepad2.rumble(50);
-//            }
+            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) > 20) {
+                gamepad2.rumble(0.5, 0.5, 50);
+                telemetry.addData("rumble: ", "is rumbling");
+            }
 
             // ===== LAUNCH =====
             /*\
@@ -225,6 +233,11 @@ public class TeleOpNoRR extends LinearOpMode {
 
             }
 
+            // ===== LIMIT SWITCH TURNING OFF PASSTHROUGH =====
+            if (!launching && limitSwitchIsPressed) {
+                passthrough.setPower(0);
+            }
+
             // ===== INTAKE STATE CHANGING =====
             /*\
              * A toggles between intaking
@@ -241,6 +254,10 @@ public class TeleOpNoRR extends LinearOpMode {
                     } else {
                         intake.setPower(INTAKE_POWER);
                         intakeState = IntakeState.on;
+
+                        if (!limitSwitchIsPressed) {
+                            passthrough.setPower(PASSTHROUGH_POWER);
+                        }
                     }
                 }
 

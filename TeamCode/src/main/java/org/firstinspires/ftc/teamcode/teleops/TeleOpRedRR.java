@@ -30,18 +30,21 @@ public class TeleOpRedRR extends LinearOpMode {
     public static double blockerPosClosed = .59;
     public static double blockerPosOpened = .78;
 
-    public static double launchTimerDelayToIntake = 1000; //ms
-    public static double launchTimerDelayToPassthrough = 100; //ms
+    public static double launchTimerDelayToIntake = 600; //ms
+    public static double launchTimerDelayToPassthrough = 10; //ms
+
+    public static double limSwitchDelayToPassthrough = 250; // ms
+    private ElapsedTime passthroughTimer = new ElapsedTime();
 
     public static double INTAKE_POWER = 1.0;
     public static double PASSTHROUGH_POWER = 0.5;
 
-    public static double CLOSE_VEL = 1000;
-    public static double MED_VEL = 1360;
-    public static double FAR_VEL = 1580;
+    public static double CLOSE_VEL = 1020;
+    public static double MED_VEL = 1180;
+    public static double FAR_VEL = 1480;
 
     public static double CLOSE_ANG = 1;
-    public static double MED_ANG = 0;
+    public static double MED_ANG = 0.3;
     public static double FAR_ANG = 0;
 
     private DcMotor leftFrontDriveMotor;
@@ -60,10 +63,11 @@ public class TeleOpRedRR extends LinearOpMode {
     private double flywheelTarVel = 0;
     private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
-    private LaunchState launchState = LaunchState.down;
     private ElapsedTime launchTimer = new ElapsedTime();
 
     private boolean launching = false;
+    private boolean ballReady = false;
+    private boolean firstPass = true;
 
     private DriveState driveState = DriveState.fieldCentric;
 
@@ -80,7 +84,6 @@ public class TeleOpRedRR extends LinearOpMode {
     private boolean dpadLeft2Prev = false;
     private boolean dpadRight2Prev = false;
     private boolean bumperR2Prev = false;
-    private boolean triggerR1Prev = false;
 
     public void runOpMode() {
 
@@ -124,6 +127,7 @@ public class TeleOpRedRR extends LinearOpMode {
         waitForStart();
 
         launchTimer.reset();
+        passthroughTimer.reset();
 
         while (opModeIsActive()) {
 
@@ -187,7 +191,7 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (dpadUp2Prev) {
                     flywheelPower += 0.025;
-                    flywheelTarVel += 10;
+                    flywheelTarVel += 20;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.dpad_down != dpadDown2Prev) {
@@ -195,7 +199,7 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (dpadDown2Prev) {
                     flywheelPower -= 0.025;
-                    flywheelTarVel -= 10;
+                    flywheelTarVel -= 20;
                     updateFlywheel = true;
                 }
             }
@@ -237,6 +241,8 @@ public class TeleOpRedRR extends LinearOpMode {
 
             if (launching) {
 
+                ballReady = false;
+
                 blocker.setPosition(blockerPosOpened);
 
                 if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
@@ -250,8 +256,23 @@ public class TeleOpRedRR extends LinearOpMode {
             }
 
             // ===== LIMIT SWITCH TURNING OFF PASSTHROUGH =====
-            if (!launching && limitSwitchIsPressed) {
-                passthrough.setPower(0);
+            if (limitSwitchIsPressed) {
+                ballReady = true;
+            }
+
+            if (!launching && ballReady) {
+
+                if (firstPass) {
+                    passthroughTimer.reset();
+                }
+
+                if (passthroughTimer.milliseconds() >= limSwitchDelayToPassthrough) {
+                    passthrough.setPower(0);
+                }
+
+                firstPass = false;
+            } else {
+                firstPass = true;
             }
 
             // ===== INTAKE STATE CHANGING =====
@@ -271,7 +292,7 @@ public class TeleOpRedRR extends LinearOpMode {
                         intake.setPower(INTAKE_POWER);
                         intakeState = IntakeState.on;
 
-                        if (!limitSwitchIsPressed) {
+                        if (!ballReady) {
                             passthrough.setPower(PASSTHROUGH_POWER);
                         }
                     }
@@ -372,7 +393,7 @@ public class TeleOpRedRR extends LinearOpMode {
             }
             mecanumDrive();
 
-            telemetry.addData("Power", flywheelPower);
+//            telemetry.addData("Power", flywheelPower);
             telemetry.addData("heading", pose.heading.toDouble());
             telemetry.addData("angle of flywheel", angleAdjust);
             telemetry.addData("velocity of flywheel", flywheel.getVelocity());
@@ -477,9 +498,5 @@ public class TeleOpRedRR extends LinearOpMode {
 
     enum IntakeState {
         off, on, reject
-    }
-
-    enum LaunchState {
-        up, down
     }
 }

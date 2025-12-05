@@ -16,9 +16,9 @@ import org.firstinspires.ftc.teamcode.PoseStorage;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 
-@TeleOp(name="TeleOp - limit switch fix - RED", group="Linear OpMode")
+@TeleOp(name="TeleOp - ASSEMBLY", group="Linear OpMode")
 @Configurable
-public class TeleOpRedRR_LimFix extends LinearOpMode {
+public class TeleOpAssembly extends LinearOpMode {
 
     public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
 
@@ -30,18 +30,21 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
     public static double blockerPosClosed = .59;
     public static double blockerPosOpened = .78;
 
-    public static double launchTimerDelayToIntake = 1000; //ms
-    public static double launchTimerDelayToPassthrough = 100; //ms
+    public static double launchTimerDelayToIntake = 10; //ms
+    public static double launchTimerDelayToPassthrough = 10; //ms
+
+    public static double limSwitchDelayToPassthrough = 250; // ms
+    private ElapsedTime passthroughTimer = new ElapsedTime();
 
     public static double INTAKE_POWER = 1.0;
     public static double PASSTHROUGH_POWER = 0.5;
 
-    public static double CLOSE_VEL = 1000;
-    public static double MED_VEL = 1360;
-    public static double FAR_VEL = 1580;
+    public static double CLOSE_VEL = 1020;
+    public static double MED_VEL = 1180;
+    public static double FAR_VEL = 1480;
 
     public static double CLOSE_ANG = 1;
-    public static double MED_ANG = 0;
+    public static double MED_ANG = 0.3;
     public static double FAR_ANG = 0;
 
     private DcMotor leftFrontDriveMotor;
@@ -60,11 +63,11 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
     private double flywheelTarVel = 0;
     private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
-    private LaunchState launchState = LaunchState.down;
     private ElapsedTime launchTimer = new ElapsedTime();
 
     private boolean launching = false;
     private boolean ballReady = false;
+    private boolean firstPass = true;
 
     private DriveState driveState = DriveState.fieldCentric;
 
@@ -81,7 +84,6 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
     private boolean dpadLeft2Prev = false;
     private boolean dpadRight2Prev = false;
     private boolean bumperR2Prev = false;
-    private boolean triggerR1Prev = false;
 
     public void runOpMode() {
 
@@ -125,6 +127,7 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
         waitForStart();
 
         launchTimer.reset();
+        passthroughTimer.reset();
 
         while (opModeIsActive()) {
 
@@ -155,9 +158,9 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
                 a2Prev = gamepad2.a;
 
                 if (a2Prev) { // CLOSE
-                    flywheelPower = 0.525;
+                    flywheelPower = 1;
                     flywheelTarVel = CLOSE_VEL;
-                    angleAdjust = CLOSE_ANG;
+                    angleAdjust = 1;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -165,9 +168,9 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
                 x2Prev = gamepad2.x;
 
                 if (x2Prev) { // MEDIUM
-                    flywheelPower = 0.60;
+                    flywheelPower = 1;
                     flywheelTarVel = MED_VEL;
-                    angleAdjust = MED_ANG;
+                    angleAdjust = 0.5;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -175,9 +178,9 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
                 y2Prev = gamepad2.y;
 
                 if (y2Prev) { // FAR
-                    flywheelPower = 0.725;
+                    flywheelPower = 1;
                     flywheelTarVel = FAR_VEL;
-                    angleAdjust = FAR_ANG;
+                    angleAdjust = 0;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -188,7 +191,7 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
 
                 if (dpadUp2Prev) {
                     flywheelPower += 0.025;
-                    flywheelTarVel += 10;
+                    flywheelTarVel += 20;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.dpad_down != dpadDown2Prev) {
@@ -196,21 +199,16 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
 
                 if (dpadDown2Prev) {
                     flywheelPower -= 0.025;
-                    flywheelTarVel -= 10;
+                    flywheelTarVel -= 20;
                     updateFlywheel = true;
                 }
             }
 
             if (updateFlywheel) {
 //                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
-//                flywheel.setPower(flywheelPower);
+                flywheel.setPower(flywheelPower);
 
-                flywheel.setVelocity(flywheelTarVel);
-            }
-
-            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) > 20) {
-                gamepad2.rumble(0.5, 0.5, 50);
-                telemetry.addData("rumble: ", "is rumbling");
+//                flywheel.setVelocity(flywheelTarVel);
             }
 
             // ===== LAUNCH =====
@@ -258,7 +256,18 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
             }
 
             if (!launching && ballReady) {
-                passthrough.setPower(0);
+
+                if (firstPass) {
+                    passthroughTimer.reset();
+                }
+
+                if (passthroughTimer.milliseconds() >= limSwitchDelayToPassthrough) {
+                    passthrough.setPower(0);
+                }
+
+                firstPass = false;
+            } else {
+                firstPass = true;
             }
 
             // ===== INTAKE STATE CHANGING =====
@@ -379,7 +388,7 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
             }
             mecanumDrive();
 
-            telemetry.addData("Power", flywheelPower);
+//            telemetry.addData("Power", flywheelPower);
             telemetry.addData("heading", pose.heading.toDouble());
             telemetry.addData("angle of flywheel", angleAdjust);
             telemetry.addData("velocity of flywheel", flywheel.getVelocity());
@@ -484,9 +493,5 @@ public class TeleOpRedRR_LimFix extends LinearOpMode {
 
     enum IntakeState {
         off, on, reject
-    }
-
-    enum LaunchState {
-        up, down
     }
 }

@@ -13,7 +13,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
+@Disabled
 @TeleOp(name="TeleOp - NO AUTOAIM / HEADLESS", group="Linear OpMode")
 @Configurable
 public class TeleOpNoRR extends LinearOpMode {
@@ -23,8 +25,8 @@ public class TeleOpNoRR extends LinearOpMode {
     public static double blockerPosClosed = .59;
     public static double blockerPosOpened = .78;
 
-    public static double launchTimerDelayToIntake = 1000; //ms
-    public static double launchTimerDelayToPassthrough = 100; //ms
+    public static double launchTimerDelayToIntake = 600; //ms
+    public static double launchTimerDelayToPassthrough = 10; //ms
 
     public static double INTAKE_POWER = 1.0;
     public static double PASSTHROUGH_POWER = 0.5;
@@ -57,6 +59,7 @@ public class TeleOpNoRR extends LinearOpMode {
     private ElapsedTime launchTimer = new ElapsedTime();
 
     private boolean launching = false;
+    private boolean ballReady = false;
 
     private boolean a1Prev = false;
     private boolean b1Prev = false;
@@ -191,10 +194,9 @@ public class TeleOpNoRR extends LinearOpMode {
                 flywheel.setVelocity(flywheelTarVel);
             }
 
-            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) > 20) {
-                gamepad2.rumble(0.5, 0.5, 50);
-                telemetry.addData("rumble: ", "is rumbling");
-            }
+//            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) < 50) {
+//                gamepad2.rumble(50);
+//            }
 
             // ===== LAUNCH =====
             /*\
@@ -221,6 +223,8 @@ public class TeleOpNoRR extends LinearOpMode {
 
             if (launching) {
 
+                ballReady = false;
+
                 blocker.setPosition(blockerPosOpened);
 
                 if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
@@ -234,7 +238,11 @@ public class TeleOpNoRR extends LinearOpMode {
             }
 
             // ===== LIMIT SWITCH TURNING OFF PASSTHROUGH =====
-            if (!launching && limitSwitchIsPressed) {
+            if (limitSwitchIsPressed) {
+                ballReady = true;
+            }
+
+            if (!launching && ballReady) {
                 passthrough.setPower(0);
             }
 
@@ -255,7 +263,7 @@ public class TeleOpNoRR extends LinearOpMode {
                         intake.setPower(INTAKE_POWER);
                         intakeState = IntakeState.on;
 
-                        if (!limitSwitchIsPressed) {
+                        if (!ballReady) {
                             passthrough.setPower(PASSTHROUGH_POWER);
                         }
                     }

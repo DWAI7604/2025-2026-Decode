@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.PinpointLocalizer;
@@ -14,10 +15,8 @@ import org.firstinspires.ftc.teamcode.PoseStorage;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
-@Disabled
-@TeleOp(name="TeleOp - BLUE", group="Linear OpMode")
+@TeleOp(name="*TeleOp - BLUE")
 @Configurable
 public class TeleOpBlueRR extends LinearOpMode {
 
@@ -28,25 +27,59 @@ public class TeleOpBlueRR extends LinearOpMode {
     private PinpointLocalizer localizer;
     private Pose2d pose;
 
+    public static double blockerPosClosed = .59;
+    public static double blockerPosOpened = .78;
+
+    public static double launchTimerDelayToIntake = 600; //ms
+    public static double launchTimerDelayToPassthrough = 10; //ms
+
+    public static double limSwitchDelayToPassthrough = 250; // ms
+    private ElapsedTime passthroughTimer = new ElapsedTime();
+
+    public static double INTAKE_POWER = 1.0;
+    public static double PASSTHROUGH_POWER = 0.5;
+
+    public static double CLOSE_VEL = 1020;
+    public static double MED_VEL = 1180;
+    public static double FAR_VEL = 1490;
+
+    public static double CLOSE_ANG = 1;
+    public static double MED_ANG = 0.3;
+    public static double FAR_ANG = 0;
+
+    public static double YAW_STRENGTH = 0.85;
+    public static double AUTOAIM_STICK_STRENGTH_FAR = 0.08;
+    public static double AUTOAIM_STICK_STRENGTH_CLOSE = 0.2;
+
+    private double autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_FAR;
+
     private DcMotor leftFrontDriveMotor;
     private DcMotor leftBackDriveMotor;
     private DcMotor rightFrontDriveMotor;
     private DcMotor rightBackDriveMotor;
 
-    private DcMotorEx flywheel;
     private DcMotor intake;
-    private Servo feeder; // this is that lil flicky switch
+    private DcMotor passthrough;
+    private DcMotorEx flywheel;
+    private Servo blocker;
     private Servo angleAdjustServo;
-    private DcMotor passthrough; // passthrough
+    private TouchSensor limitSwitch;
 
-    private boolean passthroughOn = false;
     private double flywheelPower;
     private double flywheelTarVel = 0;
     private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
-    private FeederState feederState = FeederState.down;
-    private ElapsedTime feederTimer = new ElapsedTime();
+    private ElapsedTime launchTimer = new ElapsedTime();
+
+    private boolean blockerClosedPrimary = true;
+    private boolean blockerClosedSecondary = true;
+    private boolean launching = false;
+    private boolean ballReady = false;
+    private boolean firstPass = true;
+
     private DriveState driveState = DriveState.fieldCentric;
+    private ShotLocation shotLocation = ShotLocation.far;
+
     private boolean a1Prev = false;
     private boolean b1Prev = false;
     private boolean x1Prev = false;
@@ -60,7 +93,7 @@ public class TeleOpBlueRR extends LinearOpMode {
     private boolean dpadLeft2Prev = false;
     private boolean dpadRight2Prev = false;
     private boolean bumperR2Prev = false;
-    private boolean triggerR1Prev = false;
+    private boolean bumperL2Prev = false;
 
     public void runOpMode() {
 
@@ -87,18 +120,28 @@ public class TeleOpBlueRR extends LinearOpMode {
         flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(800, 0.2, 0, 0));
-        feeder = hardwareMap.get(Servo.class, "feeder");
+
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
         passthrough.setDirection(DcMotor.Direction.REVERSE);
         passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         intake = hardwareMap.get(DcMotor.class, "intake");
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        blocker = hardwareMap.get(Servo.class, "blocker");
+
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
+
+        limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
 
         waitForStart();
 
-        feederTimer.reset();
+        launchTimer.reset();
+        passthroughTimer.reset();
 
         while (opModeIsActive()) {
+
+            boolean limitSwitchIsPressed = !limitSwitch.isPressed(); // because the limit switch is wired backwards
 
             localizer.update();
             pose = localizer.getPose();
@@ -125,9 +168,10 @@ public class TeleOpBlueRR extends LinearOpMode {
                 a2Prev = gamepad2.a;
 
                 if (a2Prev) { // CLOSE
+                    autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
                     flywheelPower = 0.525;
-                    flywheelTarVel = 1000;
-                    angleAdjust = 1.0;
+                    flywheelTarVel = CLOSE_VEL;
+                    angleAdjust = CLOSE_ANG;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -135,9 +179,10 @@ public class TeleOpBlueRR extends LinearOpMode {
                 x2Prev = gamepad2.x;
 
                 if (x2Prev) { // MEDIUM
+                    autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
                     flywheelPower = 0.60;
-                    flywheelTarVel = 1360;
-                    angleAdjust = 0;
+                    flywheelTarVel = MED_VEL;
+                    angleAdjust = MED_ANG;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -145,9 +190,10 @@ public class TeleOpBlueRR extends LinearOpMode {
                 y2Prev = gamepad2.y;
 
                 if (y2Prev) { // FAR
+                    autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_FAR;
                     flywheelPower = 0.725;
-                    flywheelTarVel = 1580;
-                    angleAdjust = 0;
+                    flywheelTarVel = FAR_VEL;
+                    angleAdjust = FAR_ANG;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -180,35 +226,76 @@ public class TeleOpBlueRR extends LinearOpMode {
 
             if (Math.abs(flywheel.getVelocity() - flywheelTarVel) > 20) {
                 gamepad2.rumble(0.5, 0.5, 50);
-                telemetry.addData("rumble: ", "is rumbling");
+                telemetry.addData("rumble2: ", "is rumbling");
             }
 
-            // ===== FEEDER FLICKING =====
+            // ===== LAUNCH =====
             /*\
-             * right bumper will flick the ball up into the flywheel
+             * when button pressed and held:
+             * 1.) opens the blocker
+             * 2.) runs passthrough
+             * 3.) runs intake
+             * when button released: stop passthrough + intake, close blocker
             \*/
 
-            if (feederTimer.milliseconds() < 50) {
-                passthrough.setPower(-0.5);
-                passthroughOn = false;
-            } else if (feederTimer.milliseconds() < 250) {
-                feeder.setPosition(.24);
-                feederState = FeederState.up;
-                passthrough.setPower(0);
+            if (gamepad2.right_bumper != bumperR2Prev) {
+                bumperR2Prev = gamepad2.right_bumper;
+
+                if (bumperR2Prev) {
+                    launchTimer.reset();
+                    launching = true;
+                } else {
+                    intake.setPower(0);
+                    passthrough.setPower(0);
+//                    blocker.setPosition(blockerPosClosed);
+                    blockerClosedPrimary = true;
+                    launching = false;
+                }
             }
 
-            if (feederTimer.milliseconds() > 300) {
+            if (launching) {
 
-                if (feederState == FeederState.up) {
-                    feeder.setPosition(0.67);
-                    feederState = FeederState.down;
-                } else if (gamepad2.right_bumper != bumperR2Prev) {
-                    bumperR2Prev = gamepad2.right_bumper;
+                ballReady = false;
 
-                    if (bumperR2Prev) {
-                        feederTimer.reset();
-                    }
+//                blocker.setPosition(blockerPosOpened);
+                blockerClosedPrimary = false;
+
+                if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
+                    passthrough.setPower(PASSTHROUGH_POWER);
                 }
+
+                if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
+                    intake.setPower(INTAKE_POWER);
+                }
+
+            }
+
+            blockerClosedSecondary = !gamepad2.left_bumper;
+
+            if (!blockerClosedPrimary || !blockerClosedSecondary) {
+                blocker.setPosition(blockerPosOpened);
+            } else {
+                blocker.setPosition(blockerPosClosed);
+            }
+
+            // ===== LIMIT SWITCH TURNING OFF PASSTHROUGH =====
+            if (limitSwitchIsPressed) {
+                ballReady = true;
+            }
+
+            if (!launching && ballReady) {
+
+                if (firstPass) {
+                    passthroughTimer.reset();
+                }
+
+                if (passthroughTimer.milliseconds() >= limSwitchDelayToPassthrough) {
+                    passthrough.setPower(0);
+                }
+
+                firstPass = false;
+            } else {
+                firstPass = true;
             }
 
             // ===== INTAKE STATE CHANGING =====
@@ -220,13 +307,17 @@ public class TeleOpBlueRR extends LinearOpMode {
 
                 a1Prev = gamepad1.a;
 
-                if (a1Prev) { // this code only runs when the a button is pressed, not released
+                if (a1Prev) {
                     if (intakeState == IntakeState.on) {
                         intake.setPower(0);
                         intakeState = IntakeState.off;
                     } else {
-                        intake.setPower(1);
+                        intake.setPower(INTAKE_POWER);
                         intakeState = IntakeState.on;
+
+                        if (!ballReady) {
+                            passthrough.setPower(PASSTHROUGH_POWER);
+                        }
                     }
                 }
 
@@ -234,12 +325,12 @@ public class TeleOpBlueRR extends LinearOpMode {
 
                 b1Prev = gamepad1.b;
 
-                if (b1Prev) { // this code only runs when the a button is pressed, not released
+                if (b1Prev) {
                     if (intakeState == IntakeState.reject) {
                         intake.setPower(0);
                         intakeState = IntakeState.off;
                     } else {
-                        intake.setPower(-1);
+                        intake.setPower(-INTAKE_POWER);
                         intakeState = IntakeState.reject;
                     }
                 }
@@ -254,34 +345,11 @@ public class TeleOpBlueRR extends LinearOpMode {
              * dpad down rejects the artifact
             \*/
             if (gamepad1.dpad_up) {
-                passthrough.setPower(0.5);
-                passthroughOn = true;
+                passthrough.setPower(PASSTHROUGH_POWER);
             } else if (gamepad1.dpad_right) {
                 passthrough.setPower(0);
-                passthroughOn = false;
             } else if (gamepad1.dpad_down) {
-                passthrough.setPower(-0.5);
-                passthroughOn = false;
-            }
-
-
-
-            if ((gamepad1.right_trigger > 0.5) != triggerR1Prev) {
-                triggerR1Prev = gamepad1.right_trigger > 0.5;
-
-                if (triggerR1Prev) {
-                    if (passthroughOn) {
-                        passthrough.setPower(0);
-                        passthroughOn = false;
-                    } else {
-                        passthrough.setPower(0.5);
-                        passthroughOn = true;
-                    }
-                }
-            }
-
-            if (passthroughOn) {
-                gamepad1.rumble(0.5, 0.5, 50);
+                passthrough.setPower(-PASSTHROUGH_POWER);
             }
 
             // ===== ADJUST ANGLE OF FLYWHEEL =====
@@ -312,8 +380,8 @@ public class TeleOpBlueRR extends LinearOpMode {
             }
 
             // ===== RESET POSITION OF ROBOT =====
-            if (gamepad1.left_bumper && gamepad1.right_bumper) { // 30, 9
-                localizer.setPose( new Pose2d(72 - 9, 72 - 30, PI_CONST / 2.0) );
+            if (gamepad1.left_bumper && gamepad1.right_bumper) {
+                localizer.setPose( new Pose2d(72 - 8, 72 - 30, PI_CONST / 2.0) );
             }
 
             // ===== DRIVE THE ROBOT =====
@@ -346,9 +414,15 @@ public class TeleOpBlueRR extends LinearOpMode {
                 }
 
             }
+
+            if (driveState == DriveState.autoAim) {
+                gamepad1.rumble(0.3, 0.3, 50);
+                telemetry.addData("rumble1: ", "is rumbling");
+            }
+
             mecanumDrive();
 
-            telemetry.addData("Power", flywheelPower);
+//            telemetry.addData("Power", flywheelPower);
             telemetry.addData("heading", pose.heading.toDouble());
             telemetry.addData("angle of flywheel", angleAdjust);
             telemetry.addData("velocity of flywheel", flywheel.getVelocity());
@@ -359,6 +433,7 @@ public class TeleOpBlueRR extends LinearOpMode {
 
             panelsTelemetry.getTelemetry().addData("flywheel velocity", flywheel.getVelocity());
             panelsTelemetry.getTelemetry().addData("flywheel target", flywheelTarVel);
+//            panelsTelemetry.getTelemetry().addData("feeder position", feeder.getPosition());
             panelsTelemetry.getTelemetry().update();
         }
     }
@@ -370,24 +445,24 @@ public class TeleOpBlueRR extends LinearOpMode {
         double rightBackPower;
 
         double heading = pose.heading.toDouble();
-        heading = heading + PI_CONST / 2.0; // adjusted for (hopefully) blue's POV
+        heading = heading - PI_CONST / 2.0; // adjusted for (hopefully) red's POV
         double yaw = 0;
         double axial = 0;
         double lateral = 0;
 
         if (driveState == DriveState.fieldCentric) {
             yaw = -gamepad1.right_stick_x;
-            axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
-            lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
+            axial = -(gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
+            lateral = -(gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
         } else if (driveState == DriveState.robotCentric) {
             yaw = -gamepad1.right_stick_x;
             axial = gamepad1.left_stick_y;
             lateral = -gamepad1.left_stick_x;
         } else if (driveState == DriveState.autoAim) {
-            yaw = locateGoal();
-            yaw = Math.min(Math.max(-yaw, -1.0), 1.0);
-            axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
-            lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
+            yaw = locateGoal() - autoaim_stick_strength * (-gamepad1.right_stick_x);
+            yaw = Math.min(Math.max(-yaw, -1.2), 1.2);
+            axial = -(gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
+            lateral = -(gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
         }
 
         double denominator = Math.max(Math.abs(axial) + Math.abs(lateral) + Math.abs(yaw), 1);
@@ -414,6 +489,7 @@ public class TeleOpBlueRR extends LinearOpMode {
         rightBackDriveMotor.setPower(rightBackPower);
 
         telemetry.addData("heading", heading);
+        telemetry.addData("speedScaler", speedScaler);
     } // updates motors according to gamepad + locateGoal
 
     public double locateGoal () { // returns the yaw value so that the robot turns to the RED goal
@@ -424,8 +500,8 @@ public class TeleOpBlueRR extends LinearOpMode {
 
         telemetry.addData("robotHeading", robotHeading);
 
-        double xDist = (-72 + 5) - pose.position.x;
-        double yDist = (-72 + 12) - pose.position.y;
+        double xDist = (-72 + 3) - pose.position.x;
+        double yDist = (-72 + 5) - pose.position.y;
 
         telemetry.addData("xDist", xDist);
         telemetry.addData("yDist", yDist);
@@ -439,7 +515,7 @@ public class TeleOpBlueRR extends LinearOpMode {
 
         telemetry.addData("goalHeading", goalHeading);
 
-        yaw = (robotHeading - goalHeading) * .50;
+        yaw = (robotHeading - goalHeading) * YAW_STRENGTH;
 
         return yaw;
 
@@ -453,7 +529,7 @@ public class TeleOpBlueRR extends LinearOpMode {
         off, on, reject
     }
 
-    enum FeederState {
-        up, down
+    enum ShotLocation {
+        far, medium, close
     }
 }

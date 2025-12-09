@@ -39,7 +39,7 @@ public class TeleOpRedRR extends LinearOpMode {
     public static double INTAKE_POWER = 1.0;
     public static double PASSTHROUGH_POWER = 0.5;
 
-    public static double CLOSE_VEL = 1020;
+    public static double CLOSE_VEL = 960;
     public static double MED_VEL = 1180;
     public static double FAR_VEL = 1490;
 
@@ -119,7 +119,7 @@ public class TeleOpRedRR extends LinearOpMode {
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
         flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(800, 0.2, 0, 0));
+        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(700, 3, 200, 0));
 
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
         passthrough.setDirection(DcMotor.Direction.REVERSE);

@@ -1,97 +1,97 @@
-package org.firstinspires.ftc.teamcode.autos;
-
-import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.ParallelAction;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
-import com.acmerobotics.roadrunner.Vector2d;
-import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-
-import org.firstinspires.ftc.teamcode.PoseStorage;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
-
-import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
-import org.firstinspires.ftc.teamcode.autos.actions.Intake;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-
-@Disabled
-@Autonomous(name="CloseThreeBall - BLUE", group="Robot")
-public class CloseThreeBallBlue extends LinearOpMode {
-
-    @Override
-    public void runOpMode() {
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-61, -44, Math.toRadians(55)));
-        Flywheel flywheel = new Flywheel(hardwareMap);
-        Intake intake = new Intake(hardwareMap);
-
-        Action moveToLaunch = drive.actionBuilder(new Pose2d(-61, -44, Math.toRadians(55)))
-                .splineTo(new Vector2d(-46, -24), Math.toRadians(65))
-                .build();
-
-        Action moveToPark = drive.actionBuilder(new Pose2d(-46, -24, Math.toRadians(65)))
-                .splineTo(new Vector2d(-44, -14), Math.toRadians(90))
-                .build();
-
-        double delay = 0; // measured in seconds
-        boolean dpadUpPrev = false;
-        boolean dpadDownPrev = false;
-
-        while(opModeInInit()) {
-            if (gamepad2.dpad_up != dpadUpPrev) {
-                dpadUpPrev = gamepad2.dpad_up;
-
-                if (dpadUpPrev) {
-                    delay += 0.05;
-                }
-            } else if (gamepad2.dpad_down != dpadDownPrev) {
-                dpadDownPrev = gamepad2.dpad_right;
-
-                if (dpadDownPrev) {
-                    delay -= 0.05;
-                }
-            }
-
-            telemetry.addData("delay: ", delay);
-            telemetry.update();
-        }
-
-        waitForStart();
-
-        Actions.runBlocking(
-                new SequentialAction(
-                        new SleepAction(delay),
-                        new ParallelAction(
-                                moveToLaunch,
-                                flywheel.velocity(1000),
-                                flywheel.angle(1),
-                                flywheel.prepLaunch()
-                        ),
-                        flywheel.launch(),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                intake.transferIn(500),
-                                intake.intakeIn(400),
-                                flywheel.velocity(1000)
-                        ),
-                        flywheel.launch(),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                intake.transferIn(600),
-                                intake.intakeIn(500),
-                                flywheel.velocity(1000)
-                        ),
-                        flywheel.launch(),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                flywheel.velocity(0),
-                                moveToPark
-                        )
-                )
-        );
-
-        PoseStorage.currentPose = drive.localizer.getPose();
-    }
-}
+//package org.firstinspires.ftc.teamcode.autos;
+//
+//import com.acmerobotics.roadrunner.Action;
+//import com.acmerobotics.roadrunner.ParallelAction;
+//import com.acmerobotics.roadrunner.Pose2d;
+//import com.acmerobotics.roadrunner.SequentialAction;
+//import com.acmerobotics.roadrunner.SleepAction;
+//import com.acmerobotics.roadrunner.Vector2d;
+//import com.acmerobotics.roadrunner.ftc.Actions;
+//import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+//import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+//
+//import org.firstinspires.ftc.teamcode.PoseStorage;
+//import org.firstinspires.ftc.teamcode.MecanumDrive;
+//
+//import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
+//import org.firstinspires.ftc.teamcode.autos.actions.Intake;
+//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+//
+//@Disabled
+//@Autonomous(name="CloseThreeBall - BLUE", group="Robot")
+//public class CloseThreeBallBlue extends LinearOpMode {
+//
+//    @Override
+//    public void runOpMode() {
+//        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-61, -44, Math.toRadians(55)));
+//        Flywheel flywheel = new Flywheel(hardwareMap);
+//        Intake intake = new Intake(hardwareMap);
+//
+//        Action moveToLaunch = drive.actionBuilder(new Pose2d(-61, -44, Math.toRadians(55)))
+//                .splineTo(new Vector2d(-46, -24), Math.toRadians(65))
+//                .build();
+//
+//        Action moveToPark = drive.actionBuilder(new Pose2d(-46, -24, Math.toRadians(65)))
+//                .splineTo(new Vector2d(-44, -14), Math.toRadians(90))
+//                .build();
+//
+//        double delay = 0; // measured in seconds
+//        boolean dpadUpPrev = false;
+//        boolean dpadDownPrev = false;
+//
+//        while(opModeInInit()) {
+//            if (gamepad2.dpad_up != dpadUpPrev) {
+//                dpadUpPrev = gamepad2.dpad_up;
+//
+//                if (dpadUpPrev) {
+//                    delay += 0.05;
+//                }
+//            } else if (gamepad2.dpad_down != dpadDownPrev) {
+//                dpadDownPrev = gamepad2.dpad_right;
+//
+//                if (dpadDownPrev) {
+//                    delay -= 0.05;
+//                }
+//            }
+//
+//            telemetry.addData("delay: ", delay);
+//            telemetry.update();
+//        }
+//
+//        waitForStart();
+//
+//        Actions.runBlocking(
+//                new SequentialAction(
+//                        new SleepAction(delay),
+//                        new ParallelAction(
+//                                moveToLaunch,
+//                                flywheel.velocity(1000),
+//                                flywheel.angle(1),
+//                                flywheel.prepLaunch()
+//                        ),
+//                        flywheel.launch(),
+//                        flywheel.launch(),
+//                        new ParallelAction(
+//                                intake.transferIn(500),
+//                                intake.intakeIn(400),
+//                                flywheel.velocity(1000)
+//                        ),
+//                        flywheel.launch(),
+//                        flywheel.launch(),
+//                        new ParallelAction(
+//                                intake.transferIn(600),
+//                                intake.intakeIn(500),
+//                                flywheel.velocity(1000)
+//                        ),
+//                        flywheel.launch(),
+//                        flywheel.launch(),
+//                        new ParallelAction(
+//                                flywheel.velocity(0),
+//                                moveToPark
+//                        )
+//                )
+//        );
+//
+//        PoseStorage.currentPose = drive.localizer.getPose();
+//    }
+//}

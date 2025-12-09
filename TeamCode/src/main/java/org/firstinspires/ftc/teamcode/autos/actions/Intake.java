@@ -8,18 +8,28 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.acmerobotics.roadrunner.Action;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Intake {
     private DcMotor intake;
-//    private CRServo transfer;
-    private DcMotor transfer;
+    private DcMotor passthrough;
+    private TouchSensor limitSwitch;
+
+    private static double INTAKE_POWER = 1.0;
+    private static double PASSTHROUGH_POWER = 0.5;
+
+    public static double limSwitchDelayToPassthrough = 250; // ms
 
     public Intake(HardwareMap hardwareMap) {
         intake = hardwareMap.get(DcMotor.class, "intake");
-//        transfer = hardwareMap.get(CRServo.class, "transfer");
-        transfer = hardwareMap.get(DcMotor.class, "passthrough");
-        transfer.setDirection(DcMotorSimple.Direction.REVERSE);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
+        passthrough.setDirection(DcMotor.Direction.REVERSE);
+        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
     }
 
     public class IntakeIn implements Action {
@@ -43,9 +53,9 @@ public class Intake {
                 timer1.reset();
 
                 if (reversed)
-                    intake.setPower(-1);
+                    intake.setPower(-INTAKE_POWER);
                 else
-                    intake.setPower(1);
+                    intake.setPower(INTAKE_POWER);
             }
 
             if (timer1.milliseconds() > milliseconds1) {
@@ -78,13 +88,45 @@ public class Intake {
                 timer2.reset();
 
                 if (reversed)
-                    transfer.setPower(-0.5);
+                    passthrough.setPower(-PASSTHROUGH_POWER);
                 else
-                    transfer.setPower(.5);
+                    passthrough.setPower(PASSTHROUGH_POWER);
             }
 
             if (timer2.milliseconds() > milliseconds2) {
-                transfer.setPower(0);
+                passthrough.setPower(0);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class Passthrough implements Action {
+        private boolean passthroughInitialized = false;
+        private ElapsedTime passthroughTimer = new ElapsedTime();
+
+        private boolean ending = false;
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!passthroughInitialized) {
+                passthroughInitialized = true;
+                passthroughTimer.reset();
+
+                passthrough.setPower(PASSTHROUGH_POWER);
+            }
+
+            if (!limitSwitch.isPressed() && !ending) { //  negative on lim switch because limit switch is wired backwards
+
+                ending = true;
+
+                passthroughTimer.reset();
+
+            }
+
+            if (ending && passthroughTimer.milliseconds() > limSwitchDelayToPassthrough) {
+                passthrough.setPower(0);
                 return false;
             }
 
@@ -105,4 +147,6 @@ public class Intake {
     public Action transferIn(double milliseconds, boolean reversed) {
         return new TransferIn(milliseconds, reversed);
     }
+
+    public Action passthrough () { return new Passthrough(); }
 }

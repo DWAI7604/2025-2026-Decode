@@ -20,23 +20,24 @@ import org.firstinspires.ftc.teamcode.autos.actions.Intake;
 public class CloseSixBallRed extends LinearOpMode {
 
     @Override
-    public void runOpMode() {
+    public void  runOpMode() {
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-61, 44, Math.toRadians(-55)));
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);
 
         Action moveToLaunch = drive.actionBuilder(new Pose2d(-61, 44, Math.toRadians(-55)))
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-65))
+                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59))
                 .build();
 
-        Action moveThroughIntake = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-65)))
-                .splineTo(new Vector2d(-70.0/6, 24), Math.toRadians(90))
-                .lineToYConstantHeading(51.5)
+        Action moveThroughIntake = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
+                .splineTo(new Vector2d(-70.0/6 + 2, 24), Math.toRadians(90))
+                .lineToYConstantHeading(52)
+                .lineToYConstantHeading(52)
                 .setReversed(true)
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-65 + 180))
+                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
                 .build();
 
-        Action moveToPark = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-65)))
+        Action moveToPark = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
                 .splineTo(new Vector2d(-44, 14), Math.toRadians(-90))
                 .build();
 
@@ -72,52 +73,22 @@ public class CloseSixBallRed extends LinearOpMode {
                                 moveToLaunch,
                                 flywheel.velocity(1000),
                                 flywheel.angle(1),
-                                flywheel.prepLaunch()
+                                flywheel.closeBlocker()
                         ),
-                        flywheel.launch(),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                intake.transferIn(500),
-                                intake.intakeIn(400),
-                                flywheel.velocity(1000)
-                        ),
-                        flywheel.launch(),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                intake.transferIn(600),
-                                intake.intakeIn(500),
-                                flywheel.velocity(1000)
-                        ),
-                        flywheel.launch(),
                         flywheel.launch(),
 
 
                         new ParallelAction(
                                 moveThroughIntake,
-                                intake.transferIn(3200),
-                                intake.intakeIn(5700),
+                                intake.passthrough(),
+                                intake.intakeIn(4600),
                                 flywheel.velocity(1000)
                         ),
+                        flywheel.launch(),
 
 
-                        flywheel.launch(),
-                        flywheel.launch(),
                         new ParallelAction(
-                                intake.transferIn(500),
-                                intake.intakeIn(400),
-                                flywheel.velocity(1000)
-                        ),
-                        flywheel.launch(),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                intake.transferIn(600),
-                                intake.intakeIn(500),
-                                flywheel.velocity(1000)
-                        ),
-                        flywheel.launch(),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                flywheel.velocity(0),
+                                flywheel.stopAll(),
                                 moveToPark
                         )
                 )

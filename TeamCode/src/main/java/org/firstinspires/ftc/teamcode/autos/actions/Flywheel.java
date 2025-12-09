@@ -3,65 +3,69 @@ package org.firstinspires.ftc.teamcode.autos.actions;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.bylazar.telemetry.PanelsTelemetry;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.acmerobotics.roadrunner.Action;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Flywheel {
+
+    public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
+
     private DcMotorEx flywheel;
-    private Servo feeder;
+    private DcMotor passthrough;
+    private DcMotor intake;
     private Servo angleAdjustServo;
+    private Servo blocker;
+
+    private static double blockerPosClosed = .59;
+    private static double blockerPosOpened = .78;
+
+    private static double launchTimerDelayToIntake = 600; //ms
+    private static double launchTimerDelayToPassthrough = 10; //ms
+    private static double launchTimerDelayToEnd = 1900; // ms
+
+    private static double INTAKE_POWER = 1.0;
+    private static double PASSTHROUGH_POWER = 0.5;
 
     public Flywheel(HardwareMap hardwareMap) {
-        flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
-        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
+        flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        feeder = hardwareMap.get(Servo.class, "feeder");
+        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(700, 3, 200, 0));
+
+        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
+        passthrough.setDirection(DcMotor.Direction.REVERSE);
+        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
-    }
 
-    public class Power implements Action {
-        private boolean initialized1 = false;
-        private ElapsedTime timer1 = new ElapsedTime();
-        double power;
-        double seconds;
-
-        public Power(double power, double seconds) {
-            this.power = power;
-            this.seconds = seconds;
-        }
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet) {
-            if (!initialized1) {
-                flywheel.setPower(power);
-                initialized1 = true;
-                timer1.reset();
-            }
-
-            return timer1.seconds() < seconds;
-        }
+        blocker = hardwareMap.get(Servo.class, "blocker");
     }
 
     public class Velocity implements Action {
-        private boolean initialized4 = false;
+        private boolean velocityInitialized = false;
         double velocity;
         int numOfCorrect = 0;
 
         public Velocity(double velocity) {
             this.velocity = velocity;
-            initialized4 = false;
+            velocityInitialized = false;
         }
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            if (!initialized4) {
+            if (!velocityInitialized) {
                 flywheel.setVelocity(velocity);
-                initialized4 = true;
+                velocityInitialized = true;
             }
 
             flywheel.setVelocity(velocity);
@@ -72,14 +76,14 @@ public class Flywheel {
 //            packet.put("mode", "velocity");
             packet.put("4.OUTPUT", Math.abs( flywheel.getVelocity() - velocity ) > 15);
 
-            if (Math.abs( flywheel.getVelocity() - velocity ) > 15) {
+            if (Math.abs( flywheel.getVelocity() - velocity ) > 25) {
                 numOfCorrect = 0;
             } else {
                 numOfCorrect++;
             }
 
-            if (numOfCorrect >= 3) {
-                initialized4 = false;
+            if (numOfCorrect >= 5) {
+                velocityInitialized = false;
                 return false;
             }
             return true;
@@ -87,62 +91,38 @@ public class Flywheel {
     }
 
     public class Launch implements Action {
-        private boolean initialized2 = false;
-        private ElapsedTime timer2 = new ElapsedTime();
+        private boolean launchInitialized = false;
+        private ElapsedTime launchTimer = new ElapsedTime();
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            if (!initialized2) {
-                initialized2 = true;
-                timer2.reset();
-                feeder.setPosition(.2);
-            }
-            packet.put("mode", "launch");
-
-            if (timer2.milliseconds() < 400) {
-                feeder.setPosition(.24);
-                packet.put("target: ", "0.24");
-            } else {
-                feeder.setPosition(.67);
-                packet.put("target: ", "0.67");
+            if (!launchInitialized) {
+                launchInitialized = true;
+                launchTimer.reset();
             }
 
-            packet.put("position: ", feeder.getPosition());
+            blocker.setPosition(blockerPosOpened);
 
-            return timer2.milliseconds() < 700;
-        }
-    }
-
-    public class PrepLaunch implements Action {
-        private boolean initialized6 = false;
-        private ElapsedTime timer6 = new ElapsedTime();
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet) {
-            if (!initialized6) {
-                initialized6 = true;
-                timer6.reset();
-                feeder.setPosition(.4);
-            }
-            packet.put("mode", "prep-launch");
-
-            if (timer6.milliseconds() < 400) {
-                feeder.setPosition(.65);
-                packet.put("target: ", "0.65");
-            } else {
-                feeder.setPosition(.67);
-                packet.put("target: ", "0.67");
+            if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
+                passthrough.setPower(PASSTHROUGH_POWER);
             }
 
-            packet.put("position: ", feeder.getPosition());
+            if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
+                intake.setPower(INTAKE_POWER);
+            }
 
-            return timer6.milliseconds() < 700;
+            if (launchTimer.milliseconds() >= launchTimerDelayToEnd) {
+                blocker.setPosition(blockerPosClosed);
+                return false;
+            }
+
+            return true;
         }
     }
 
     public class Angle implements Action {
-        private boolean initialized3 = false;
-        private ElapsedTime timer3 = new ElapsedTime();
+        private boolean angleInitialized = false;
+        private ElapsedTime angleTimer = new ElapsedTime();
         private double angle;
 
         public Angle(double angle) {
@@ -151,26 +131,55 @@ public class Flywheel {
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            if (!initialized3) {
-                initialized3 = true;
-                timer3.reset();
+            if (!angleInitialized) {
+                angleInitialized = true;
+                angleTimer.reset();
                 angleAdjustServo.setPosition(angle);
             }
 
-            return timer3.milliseconds() < 200;
+            return angleTimer.milliseconds() < 50;
         }
     }
 
-    public Action power(double power, double seconds) {
-        return new Power(power, seconds);
+    public class CloseBlocker implements Action {
+        private boolean blockerInitialized = false;
+        private ElapsedTime blockerTimer = new ElapsedTime();
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!blockerInitialized) {
+                blockerInitialized = true;
+                blockerTimer.reset();
+                blocker.setPosition(blockerPosClosed);
+            }
+
+            return blockerTimer.milliseconds() < 10;
+        }
     }
+
+    public class StopAll implements Action {
+        private boolean stopInitialized = false;
+        private ElapsedTime stopTimer = new ElapsedTime();
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!stopInitialized) {
+                stopInitialized = true;
+                stopTimer.reset();
+
+                blocker.setPosition(blockerPosClosed);
+                passthrough.setPower(0);
+                intake.setPower(0);
+                flywheel.setVelocity(0);
+            }
+
+            return stopTimer.milliseconds() < 10;
+        }
+    }
+
 
     public Action launch() {
         return new Launch();
-    }
-
-    public Action prepLaunch() {
-        return new PrepLaunch();
     }
 
     public Action angle(double angle) {
@@ -178,4 +187,8 @@ public class Flywheel {
     }
 
     public Action velocity(double velocity) { return new Velocity(velocity); }
+
+    public Action closeBlocker() { return new CloseBlocker(); }
+
+    public Action stopAll() { return new StopAll(); }
 }

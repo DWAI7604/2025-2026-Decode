@@ -26,10 +26,10 @@ public class CloseThreeBallRed extends LinearOpMode {
         Intake intake = new Intake(hardwareMap);
 
         Action moveToLaunch = drive.actionBuilder(new Pose2d(-61, 44, Math.toRadians(-55)))
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-65))
+                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59))
                 .build();
 
-        Action moveToPark = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-65)))
+        Action moveToPark = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
                 .splineTo(new Vector2d(-44, 14), Math.toRadians(-90))
                 .build();
 
@@ -65,26 +65,11 @@ public class CloseThreeBallRed extends LinearOpMode {
                                 moveToLaunch,
                                 flywheel.velocity(1000),
                                 flywheel.angle(1),
-                                flywheel.prepLaunch()
+                                flywheel.closeBlocker()
                         ),
                         flywheel.launch(),
-                        flywheel.launch(),
                         new ParallelAction(
-                                intake.transferIn(500),
-                                intake.intakeIn(400),
-                                flywheel.velocity(1000)
-                        ),
-                        flywheel.launch(),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                intake.transferIn(600),
-                                intake.intakeIn(500),
-                                flywheel.velocity(1000)
-                        ),
-                        flywheel.launch(),
-                        flywheel.launch(),
-                        new ParallelAction(
-                                flywheel.velocity(0),
+                                flywheel.stopAll(),
                                 moveToPark
                         )
                 )

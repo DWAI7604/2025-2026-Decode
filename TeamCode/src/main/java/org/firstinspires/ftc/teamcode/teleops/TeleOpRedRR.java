@@ -295,7 +295,7 @@ public class TeleOpRedRR extends LinearOpMode {
             }
 
             // ===== LIMIT SWITCH TURNING OFF PASSTHROUGH =====
-            if (limitSwitchIsPressed) {
+            if (limitSwitchIsPressed && intakeState != IntakeState.reject) {
                 ballReady = true;
             }
 
@@ -365,10 +365,13 @@ public class TeleOpRedRR extends LinearOpMode {
                 if (b1Prev) {
                     if (intakeState == IntakeState.reject) {
                         intake.setPower(0);
+                        passthrough.setPower(passthroughPower);
                         intakeState = IntakeState.off;
                     } else {
                         intake.setPower(-INTAKE_POWER);
                         intakeState = IntakeState.reject;
+                        passthrough.setPower(-passthroughPower);
+                        ballReady = false;
                     }
                 }
 

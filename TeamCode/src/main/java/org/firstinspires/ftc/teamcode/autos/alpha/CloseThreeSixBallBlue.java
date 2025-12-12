@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
 import org.firstinspires.ftc.teamcode.autos.actions.Intake;
 
-@Autonomous(name="Alpha - Close 3+6 - BLUE", group="Robot")
+@Autonomous(name="Gate - Close 3+6 - BLUE", group="Robot")
 public class CloseThreeSixBallBlue extends LinearOpMode {
 
     public final MecanumKinematics kinematics = new MecanumKinematics(
@@ -57,19 +57,33 @@ public class CloseThreeSixBallBlue extends LinearOpMode {
         double delay = 0; // measured in seconds
         boolean dpadUpPrev = false;
         boolean dpadDownPrev = false;
+        boolean dpadLeftPrev = false;
+        boolean dpadRightPrev = false;
 
         while(opModeInInit()) {
             if (gamepad2.dpad_up != dpadUpPrev) {
                 dpadUpPrev = gamepad2.dpad_up;
 
                 if (dpadUpPrev) {
-                    delay += 0.05;
+                    delay += 1;
                 }
             } else if (gamepad2.dpad_down != dpadDownPrev) {
-                dpadDownPrev = gamepad2.dpad_right;
+                dpadDownPrev = gamepad2.dpad_down;
 
                 if (dpadDownPrev) {
-                    delay -= 0.05;
+                    delay -= 1;
+                }
+            } else if (gamepad2.dpad_right != dpadRightPrev) {
+                dpadRightPrev = gamepad2.dpad_right;
+
+                if (dpadRightPrev) {
+                    delay += 0.25;
+                }
+            } else if (gamepad2.dpad_left != dpadLeftPrev) {
+                dpadLeftPrev = gamepad2.dpad_left;
+
+                if (dpadLeftPrev) {
+                    delay -= 0.25;
                 }
             }
 

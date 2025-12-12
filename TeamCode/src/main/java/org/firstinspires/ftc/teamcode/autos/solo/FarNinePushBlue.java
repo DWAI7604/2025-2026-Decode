@@ -39,7 +39,7 @@ public class FarNinePushBlue extends LinearOpMode {
 
         Action moveThroughIntake1 = drive.actionBuilder(new Pose2d(57, -17, 0.38 + Math.toRadians(-2) ))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/2 + 4, -28), Math.toRadians(-90)), Math.toRadians(-90))
+                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/2 + 4 - 12, -28), Math.toRadians(-90)), Math.toRadians(-90))
                 .lineToYConstantHeading(-63)
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(57, -17), 0.38), 0)
@@ -47,7 +47,7 @@ public class FarNinePushBlue extends LinearOpMode {
 
         Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(57, -17, 0.38))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6 + 6, -28), Math.toRadians(-90)), Math.toRadians(-90))
+                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6 + 6 - 12, -28), Math.toRadians(-90)), Math.toRadians(-90))
                 .lineToYConstantHeading(-63)
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(57, -17), 0.38 - Math.toRadians(-1) ), 0)
@@ -55,7 +55,7 @@ public class FarNinePushBlue extends LinearOpMode {
 
         Action moveToPark = drive.actionBuilder(new Pose2d(57, -17, 0.38 - Math.toRadians(-1) ))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(64.5, -38), Math.toRadians(-90)), 0)
+                .splineToLinearHeading(new Pose2d(new Vector2d(64.5 - 3, -38), Math.toRadians(-90)), 0)
                 .build();
 
         double delay = 0; // measured in seconds

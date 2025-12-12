@@ -3,8 +3,9 @@ package org.firstinspires.ftc.teamcode.othershit;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-//@Disabled
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+@Disabled
 @TeleOp(name="feeder = 0", group="Linear OpMode")
 public class MaxServo extends LinearOpMode {
     private Servo servo;

@@ -2,8 +2,10 @@ package org.firstinspires.ftc.teamcode.othershit;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
+@Disabled
 @TeleOp
 public class limitSwitchTesting extends LinearOpMode {
 

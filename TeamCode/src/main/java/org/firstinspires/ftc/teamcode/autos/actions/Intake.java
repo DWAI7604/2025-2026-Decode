@@ -130,6 +130,11 @@ public class Intake {
                 return false;
             }
 
+            if (passthroughTimer.milliseconds() > 7000) {
+                passthrough.setPower(0);
+                return false;
+            }
+
             return true;
         }
     }

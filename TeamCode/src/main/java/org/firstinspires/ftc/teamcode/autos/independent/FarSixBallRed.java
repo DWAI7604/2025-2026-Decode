@@ -1,4 +1,4 @@
-//package org.firstinspires.ftc.teamcode.autos;
+//package org.firstinspires.ftc.teamcode.autos.independent;
 //
 //import com.acmerobotics.roadrunner.Action;
 //import com.acmerobotics.roadrunner.ParallelAction;
@@ -32,7 +32,7 @@
 //
 //        Action moveThroughIntake = drive.actionBuilder(new Pose2d(57, 17, -0.38))
 //                .setReversed(true)
-//                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/2, 28), Math.toRadians(90)), Math.toRadians(90))
+//                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/2 + 4, 28), Math.toRadians(90)), Math.toRadians(90))
 //                .lineToYConstantHeading(63)
 //                .setReversed(true)
 //                .splineToLinearHeading(new Pose2d(new Vector2d(57, 17), -0.38), 0)
@@ -71,57 +71,28 @@
 //        Actions.runBlocking(
 //                new SequentialAction(
 //                        new SleepAction(delay),
+//
+//
 //                        new ParallelAction(
 //                                moveToLaunch,
-//                                flywheel.velocity(1540),
+//                                flywheel.velocity(1490),
 //                                flywheel.angle(0),
-//                                flywheel.prepLaunch()
+//                                flywheel.closeBlocker()
 //                        ),
-//                        flywheel.launch(),
-//                        flywheel.launch(),
-//                        new ParallelAction(
-//                                intake.transferIn(400),
-//                                intake.intakeIn(400),
-//                                flywheel.velocity(1580)
-//                        ),
-//                        flywheel.launch(),
-//                        flywheel.launch(),
-//                        new ParallelAction(
-//                                intake.transferIn(500),
-//                                intake.intakeIn(500),
-//                                flywheel.velocity(1540)
-//                        ),
-//                        flywheel.launch(),
 //                        flywheel.launch(),
 //
 //
 //                        new ParallelAction(
 //                                moveThroughIntake,
-//                                intake.transferIn(3500),
+//                                intake.passthrough(),
 //                                intake.intakeIn(5000),
-//                                flywheel.velocity(1580)
+//                                flywheel.velocity(1490)
 //                        ),
+//                        flywheel.launch(),
 //
 //
-//                        flywheel.velocity(1580),
-//                        flywheel.launch(),
-//                        flywheel.launch(),
 //                        new ParallelAction(
-//                                intake.transferIn(400),
-//                                intake.intakeIn(400),
-//                                flywheel.velocity(1580)
-//                        ),
-//                        flywheel.launch(),
-//                        flywheel.launch(),
-//                        new ParallelAction(
-//                                intake.transferIn(500),
-//                                intake.intakeIn(500),
-//                                flywheel.velocity(1580)
-//                        ),
-//                        flywheel.launch(),
-//                        flywheel.launch(),
-//                        new ParallelAction(
-//                                flywheel.velocity(0),
+//                                flywheel.stopAll(),
 //                                moveToPark
 //                        )
 //                )

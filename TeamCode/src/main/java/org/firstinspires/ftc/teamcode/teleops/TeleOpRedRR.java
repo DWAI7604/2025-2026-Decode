@@ -30,14 +30,20 @@ public class TeleOpRedRR extends LinearOpMode {
     public static double blockerPosClosed = .59;
     public static double blockerPosOpened = .78;
 
-    public static double launchTimerDelayToIntake = 600; //ms
-    public static double launchTimerDelayToPassthrough = 10; //ms
+    public static double launchTimerDelayToIntake_FAR = 400; //ms
+    public static double launchTimerDelayToPassthrough_FAR = 10; //ms
+    public static double launchTimerDelayToIntake_CLOSE = 250; //ms
+    public static double launchTimerDelayToPassthrough_CLOSE = 5; //ms
+    private static double launchTimerDelayToIntake = launchTimerDelayToIntake_FAR; //ms
+    private static double launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_FAR; //ms
 
     public static double limSwitchDelayToPassthrough = 250; // ms
     private ElapsedTime passthroughTimer = new ElapsedTime();
 
     public static double INTAKE_POWER = 1.0;
-    public static double PASSTHROUGH_POWER = 0.5;
+    public static double PASSTHROUGH_POWER_CLOSE = 1.0;
+    public static double PASSTHROUGH_POWER_FAR = 0.5;
+    private static double passthroughPower = PASSTHROUGH_POWER_FAR;
 
     public static double CLOSE_VEL = 960;
     public static double MED_VEL = 1180;
@@ -48,7 +54,7 @@ public class TeleOpRedRR extends LinearOpMode {
     public static double FAR_ANG = 0;
     
     public static double YAW_STRENGTH = 0.85;
-    public static double AUTOAIM_STICK_STRENGTH_FAR = 0.08;
+    public static double AUTOAIM_STICK_STRENGTH_FAR = 0.14;
     public static double AUTOAIM_STICK_STRENGTH_CLOSE = 0.2;
 
     private double autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_FAR;
@@ -94,6 +100,7 @@ public class TeleOpRedRR extends LinearOpMode {
     private boolean dpadRight2Prev = false;
     private boolean bumperR2Prev = false;
     private boolean bumperL2Prev = false;
+    private boolean triggerR1Prev = false;
 
     public void runOpMode() {
 
@@ -169,6 +176,9 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (a2Prev) { // CLOSE
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
+                    passthroughPower = PASSTHROUGH_POWER_CLOSE;
+                    launchTimerDelayToIntake = launchTimerDelayToIntake_CLOSE;
+                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_CLOSE;
                     flywheelPower = 0.525;
                     flywheelTarVel = CLOSE_VEL;
                     angleAdjust = CLOSE_ANG;
@@ -180,6 +190,9 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (x2Prev) { // MEDIUM
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
+                    passthroughPower = PASSTHROUGH_POWER_CLOSE;
+                    launchTimerDelayToIntake = launchTimerDelayToIntake_CLOSE;
+                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_CLOSE;
                     flywheelPower = 0.60;
                     flywheelTarVel = MED_VEL;
                     angleAdjust = MED_ANG;
@@ -191,6 +204,9 @@ public class TeleOpRedRR extends LinearOpMode {
 
                 if (y2Prev) { // FAR
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_FAR;
+                    passthroughPower = PASSTHROUGH_POWER_FAR;
+                    launchTimerDelayToIntake = launchTimerDelayToIntake_FAR;
+                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_FAR;
                     flywheelPower = 0.725;
                     flywheelTarVel = FAR_VEL;
                     angleAdjust = FAR_ANG;
@@ -261,7 +277,7 @@ public class TeleOpRedRR extends LinearOpMode {
                 blockerClosedPrimary = false;
 
                 if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
-                    passthrough.setPower(PASSTHROUGH_POWER);
+                    passthrough.setPower(passthroughPower);
                 }
 
                 if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
@@ -303,6 +319,27 @@ public class TeleOpRedRR extends LinearOpMode {
              * A toggles between intaking
              * B toggles between rejecting
             \*/
+
+            if (triggerR1Prev != (gamepad1.right_trigger > 0.5)) {
+
+                triggerR1Prev = gamepad1.right_trigger > 0.5;
+
+                if (triggerR1Prev) {
+                    if (intakeState == IntakeState.on) {
+                        intake.setPower(0);
+                        intakeState = IntakeState.off;
+                    } else {
+                        intake.setPower(INTAKE_POWER);
+                        intakeState = IntakeState.on;
+
+                        if (!ballReady) {
+                            passthrough.setPower(passthroughPower);
+                        }
+                    }
+                }
+
+            }
+
             if (a1Prev != gamepad1.a) {
 
                 a1Prev = gamepad1.a;
@@ -316,7 +353,7 @@ public class TeleOpRedRR extends LinearOpMode {
                         intakeState = IntakeState.on;
 
                         if (!ballReady) {
-                            passthrough.setPower(PASSTHROUGH_POWER);
+                            passthrough.setPower(passthroughPower);
                         }
                     }
                 }
@@ -345,11 +382,11 @@ public class TeleOpRedRR extends LinearOpMode {
              * dpad down rejects the artifact
             \*/
             if (gamepad1.dpad_up) {
-                passthrough.setPower(PASSTHROUGH_POWER);
+                passthrough.setPower(passthroughPower);
             } else if (gamepad1.dpad_right) {
                 passthrough.setPower(0);
             } else if (gamepad1.dpad_down) {
-                passthrough.setPower(-PASSTHROUGH_POWER);
+                passthrough.setPower(-passthroughPower);
             }
 
             // ===== ADJUST ANGLE OF FLYWHEEL =====
@@ -456,10 +493,10 @@ public class TeleOpRedRR extends LinearOpMode {
             lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
         } else if (driveState == DriveState.robotCentric) {
             yaw = -gamepad1.right_stick_x;
-            axial = gamepad1.left_stick_y;
-            lateral = -gamepad1.left_stick_x;
+            axial = -gamepad1.left_stick_y;
+            lateral = gamepad1.left_stick_x;
         } else if (driveState == DriveState.autoAim) {
-            yaw = locateGoal() - autoaim_stick_strength * (-gamepad1.right_stick_x);
+            yaw = locateGoal() - autoaim_stick_strength * (-gamepad2.right_stick_x);
             yaw = Math.min(Math.max(-yaw, -1.2), 1.2);
             axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
             lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));

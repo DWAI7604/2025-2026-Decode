@@ -1,6 +1,7 @@
-package org.firstinspires.ftc.teamcode.autos;
+package org.firstinspires.ftc.teamcode.autos.alpha;
 
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.MecanumKinematics;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
@@ -16,29 +17,41 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
 import org.firstinspires.ftc.teamcode.autos.actions.Intake;
 
-@Autonomous(name="CloseSixBall - RED", group="Robot")
-public class CloseSixBallRed extends LinearOpMode {
+@Autonomous(name="Alpha - Close 3+6 - BLUE", group="Robot")
+public class CloseThreeSixBallBlue extends LinearOpMode {
+
+    public final MecanumKinematics kinematics = new MecanumKinematics(
+            MecanumDrive.PARAMS.inPerTick * MecanumDrive.PARAMS.trackWidthTicks, MecanumDrive.PARAMS.inPerTick / MecanumDrive.PARAMS.lateralInPerTick);
 
     @Override
-    public void  runOpMode() {
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-61, 44, Math.toRadians(-55)));
+    public void runOpMode() {
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-61, -44, Math.toRadians(55)));
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);
 
-        Action moveToLaunch = drive.actionBuilder(new Pose2d(-61, 44, Math.toRadians(-55)))
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59))
+        Action moveToLaunch = drive.actionBuilder(new Pose2d(-61, -44, Math.toRadians(55)))
+                .splineTo(new Vector2d(-46, -24), Math.toRadians(59))
                 .build();
 
-        Action moveThroughIntake = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
-                .splineTo(new Vector2d(-70.0/6 + 2, 24), Math.toRadians(90))
-                .lineToYConstantHeading(52)
-                .lineToYConstantHeading(52)
+        Action moveThroughIntake1 = drive.actionBuilder(new Pose2d(-46, -24, Math.toRadians(59)))
+                .splineTo(new Vector2d(-70.0/6 - 3 - 2 - 1, -24), Math.toRadians(-90))
+                .lineToYConstantHeading(-52,  kinematics.new WheelVelConstraint(55))
+                .lineToYConstantHeading(-44)
+                .splineToLinearHeading(new Pose2d(-70.0/6 - 3 - 2 - 1 + 7, -51, Math.toRadians(-180)), Math.toRadians(-90)) // HIT GATE
+                .lineToYConstantHeading(-55)
+                .lineToYConstantHeading(-48)
+                .splineToLinearHeading(new Pose2d(-46, -24, Math.toRadians(59)), 0)
+                .build();
+
+        Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(-46, -24, Math.toRadians(59)))
+                .splineTo(new Vector2d(70.0/6 - 4 - 2 - 1, -33), Math.toRadians(-90))
+                .lineToYConstantHeading(-58.5,  kinematics.new WheelVelConstraint(55))
                 .setReversed(true)
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
+                .splineTo(new Vector2d(-46, -24), Math.toRadians(-(-59 + 180)))
                 .build();
 
-        Action moveToPark = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
-                .splineTo(new Vector2d(-44, 14), Math.toRadians(-90))
+        Action moveToPark = drive.actionBuilder(new Pose2d(-46, -24, Math.toRadians(59)))
+                .splineTo(new Vector2d(-44, -14), Math.toRadians(90))
                 .build();
 
         double delay = 0; // measured in seconds
@@ -69,9 +82,11 @@ public class CloseSixBallRed extends LinearOpMode {
         Actions.runBlocking(
                 new SequentialAction(
                         new SleepAction(delay),
+
+
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(1000),
+                                flywheel.velocity(980),
                                 flywheel.angle(1),
                                 flywheel.closeBlocker()
                         ),
@@ -79,10 +94,19 @@ public class CloseSixBallRed extends LinearOpMode {
 
 
                         new ParallelAction(
-                                moveThroughIntake,
+                                moveThroughIntake1,
                                 intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(1000)
+                                flywheel.velocity(980)
+                        ),
+                        flywheel.launch(),
+
+
+                        new ParallelAction(
+                                moveThroughIntake2,
+                                intake.passthrough(),
+                                intake.intakeIn(4600),
+                                flywheel.velocity(980)
                         ),
                         flywheel.launch(),
 

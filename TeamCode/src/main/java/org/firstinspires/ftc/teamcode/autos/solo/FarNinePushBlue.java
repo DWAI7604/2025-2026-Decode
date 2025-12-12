@@ -1,9 +1,10 @@
-package org.firstinspires.ftc.teamcode.autos;
+package org.firstinspires.ftc.teamcode.autos.solo;
 
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.MecanumKinematics;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -17,45 +18,44 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
 import org.firstinspires.ftc.teamcode.autos.actions.Intake;
 
-@Autonomous(name="CloseTwelveBall - RED", group="Robot")
-public class CloseTwelveBallRed extends LinearOpMode {
+@Autonomous(name="Solo - Far 9 - BLUE", group="Robot")
+public class FarNinePushBlue extends LinearOpMode {
 
     public final MecanumKinematics kinematics = new MecanumKinematics(
             MecanumDrive.PARAMS.inPerTick * MecanumDrive.PARAMS.trackWidthTicks, MecanumDrive.PARAMS.inPerTick / MecanumDrive.PARAMS.lateralInPerTick);
 
     @Override
     public void runOpMode() {
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-61, 44, Math.toRadians(-55)));
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(63.5, -15 / 2.0 - 4, Math.toRadians(90)));
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);
 
-        Action moveToLaunch = drive.actionBuilder(new Pose2d(-61, 44, Math.toRadians(-55)))
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59))
-                .build();
-
-        Action moveThroughIntake1 = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
-                .splineTo(new Vector2d(-70.0/6 + 3, 24), Math.toRadians(90))
-                .lineToYConstantHeading(52,  kinematics.new WheelVelConstraint(55))
+        Action moveToLaunch = drive.actionBuilder(new Pose2d(63.5, -15 / 2.0 - 4, Math.toRadians(90)))
+                .setTangent(Math.toRadians(90))
+                .lineToY(-35,  kinematics.new WheelVelConstraint(30), new ProfileAccelConstraint(-20, 30))
                 .setReversed(true)
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
+                .splineToLinearHeading(new Pose2d(new Vector2d(57, -17), 0.38 + Math.toRadians(-2) ), 0)
                 .build();
 
-        Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
-                .splineTo(new Vector2d(70.0/6 + 4, 33), Math.toRadians(90))
-                .lineToYConstantHeading(58.5,  kinematics.new WheelVelConstraint(55))
+        Action moveThroughIntake1 = drive.actionBuilder(new Pose2d(57, -17, 0.38 + Math.toRadians(-2) ))
                 .setReversed(true)
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
-                .build();
-
-        Action moveThroughIntake3 = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
-                .splineTo(new Vector2d(70.0/6 + 24 + 4, 33), Math.toRadians(90))
-                .lineToYConstantHeading(58.5,  kinematics.new WheelVelConstraint(55))
+                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/2 + 4, -28), Math.toRadians(-90)), Math.toRadians(-90))
+                .lineToYConstantHeading(-63)
                 .setReversed(true)
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
+                .splineToLinearHeading(new Pose2d(new Vector2d(57, -17), 0.38), 0)
                 .build();
 
-        Action moveToPark = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
-                .splineTo(new Vector2d(-44, 14), Math.toRadians(-90))
+        Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(57, -17, 0.38))
+                .setReversed(true)
+                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6 + 6, -28), Math.toRadians(-90)), Math.toRadians(-90))
+                .lineToYConstantHeading(-63)
+                .setReversed(true)
+                .splineToLinearHeading(new Pose2d(new Vector2d(57, -17), 0.38 - Math.toRadians(-1) ), 0)
+                .build();
+
+        Action moveToPark = drive.actionBuilder(new Pose2d(57, -17, 0.38 - Math.toRadians(-1) ))
+                .setReversed(true)
+                .splineToLinearHeading(new Pose2d(new Vector2d(64.5, -38), Math.toRadians(-90)), 0)
                 .build();
 
         double delay = 0; // measured in seconds
@@ -90,8 +90,8 @@ public class CloseTwelveBallRed extends LinearOpMode {
 
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(1000),
-                                flywheel.angle(1),
+                                flywheel.velocity(1480),
+                                flywheel.angle(0),
                                 flywheel.closeBlocker()
                         ),
                         flywheel.launch(),
@@ -100,8 +100,8 @@ public class CloseTwelveBallRed extends LinearOpMode {
                         new ParallelAction(
                                 moveThroughIntake1,
                                 intake.passthrough(),
-                                intake.intakeIn(4600),
-                                flywheel.velocity(1000)
+                                intake.intakeIn(5000),
+                                flywheel.velocity(1480)
                         ),
                         flywheel.launch(),
 
@@ -109,17 +109,8 @@ public class CloseTwelveBallRed extends LinearOpMode {
                         new ParallelAction(
                                 moveThroughIntake2,
                                 intake.passthrough(),
-                                intake.intakeIn(4600),
-                                flywheel.velocity(1000)
-                        ),
-                        flywheel.launch(),
-
-
-                        new ParallelAction(
-                                moveThroughIntake3,
-                                intake.passthrough(),
-                                intake.intakeIn(4600),
-                                flywheel.velocity(1000)
+                                intake.intakeIn(5000),
+                                flywheel.velocity(1480)
                         ),
                         flywheel.launch(),
 

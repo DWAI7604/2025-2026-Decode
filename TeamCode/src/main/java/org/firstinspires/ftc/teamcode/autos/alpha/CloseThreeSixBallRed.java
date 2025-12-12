@@ -1,6 +1,7 @@
-package org.firstinspires.ftc.teamcode.autos;
+package org.firstinspires.ftc.teamcode.autos.alpha;
 
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.MecanumKinematics;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
@@ -16,8 +17,11 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
 import org.firstinspires.ftc.teamcode.autos.actions.Intake;
 
-@Autonomous(name="CloseThreeBall - RED", group="Robot")
-public class CloseThreeBallRed extends LinearOpMode {
+@Autonomous(name="Alpha - Close 3+6 - RED", group="Robot")
+public class CloseThreeSixBallRed extends LinearOpMode {
+
+    public final MecanumKinematics kinematics = new MecanumKinematics(
+            MecanumDrive.PARAMS.inPerTick * MecanumDrive.PARAMS.trackWidthTicks, MecanumDrive.PARAMS.inPerTick / MecanumDrive.PARAMS.lateralInPerTick);
 
     @Override
     public void runOpMode() {
@@ -27,6 +31,23 @@ public class CloseThreeBallRed extends LinearOpMode {
 
         Action moveToLaunch = drive.actionBuilder(new Pose2d(-61, 44, Math.toRadians(-55)))
                 .splineTo(new Vector2d(-46, 24), Math.toRadians(-59))
+                .build();
+
+        Action moveThroughIntake1 = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
+                .splineTo(new Vector2d(-70.0/6 + 3, 24), Math.toRadians(90))
+                .lineToYConstantHeading(52,  kinematics.new WheelVelConstraint(55))
+                .lineToYConstantHeading(46)
+                .splineToLinearHeading(new Pose2d(-70.0/6 + 7, 52, Math.toRadians(180)), Math.toRadians(90)) // HIT GATE
+                .lineToYConstantHeading(57)
+                .lineToYConstantHeading(50)
+                .splineToLinearHeading(new Pose2d(-46, 24, Math.toRadians(-59)), 0)
+                .build();
+
+        Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
+                .splineTo(new Vector2d(70.0/6 + 4, 33), Math.toRadians(90))
+                .lineToYConstantHeading(58.5,  kinematics.new WheelVelConstraint(55))
+                .setReversed(true)
+                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
                 .build();
 
         Action moveToPark = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
@@ -61,6 +82,8 @@ public class CloseThreeBallRed extends LinearOpMode {
         Actions.runBlocking(
                 new SequentialAction(
                         new SleepAction(delay),
+
+
                         new ParallelAction(
                                 moveToLaunch,
                                 flywheel.velocity(1000),
@@ -68,6 +91,26 @@ public class CloseThreeBallRed extends LinearOpMode {
                                 flywheel.closeBlocker()
                         ),
                         flywheel.launch(),
+
+
+                        new ParallelAction(
+                                moveThroughIntake1,
+                                intake.passthrough(),
+                                intake.intakeIn(4600),
+                                flywheel.velocity(1000)
+                        ),
+                        flywheel.launch(),
+
+
+                        new ParallelAction(
+                                moveThroughIntake2,
+                                intake.passthrough(),
+                                intake.intakeIn(4600),
+                                flywheel.velocity(1000)
+                        ),
+                        flywheel.launch(),
+
+
                         new ParallelAction(
                                 flywheel.stopAll(),
                                 moveToPark

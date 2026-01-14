@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@Disabled
+//@Disabled
 @TeleOp(name="FlywheelTuning - Quick Change", group="Linear OpMode")
 @Configurable
 public class FlywheelTuningQuickChange extends LinearOpMode {

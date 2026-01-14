@@ -1,23 +1,31 @@
 package org.firstinspires.ftc.teamcode.othershit;
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.PanelsTelemetry;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
-@Disabled
-@TeleOp(name="feeder = 0", group="Linear OpMode")
+//@Disabled
+@Configurable
+@TeleOp(name="*blocker = 0.5")
 public class MaxServo extends LinearOpMode {
     private Servo servo;
 
+
+    public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
+
+    public static double position = 0.5;
+
     @Override
     public void runOpMode () {
-        servo = hardwareMap.get(Servo.class, "feeder");
+        servo = hardwareMap.get(Servo.class, "blocker");
 
         waitForStart();
 
         while (opModeIsActive()) {
-            servo.setPosition(0);
+            servo.setPosition(position);
             sleep(100);
         }
     }

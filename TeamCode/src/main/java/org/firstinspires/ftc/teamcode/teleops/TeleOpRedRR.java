@@ -15,7 +15,9 @@ import org.firstinspires.ftc.teamcode.PoseStorage;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
+//@Disabled
 @TeleOp(name="*TeleOp - RED")
 @Configurable
 public class TeleOpRedRR extends LinearOpMode {
@@ -27,8 +29,8 @@ public class TeleOpRedRR extends LinearOpMode {
     private PinpointLocalizer localizer;
     private Pose2d pose;
 
-    public static double blockerPosClosed = .59;
-    public static double blockerPosOpened = .78;
+    public static double blockerPosClosed = .11;
+    public static double blockerPosOpened = .52;
 
     public static double launchTimerDelayToIntake_FAR = 400; //ms
     public static double launchTimerDelayToPassthrough_FAR = 10; //ms
@@ -124,7 +126,7 @@ public class TeleOpRedRR extends LinearOpMode {
 
         //Establish hardware properties for other devices
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
-        flywheel.setDirection(DcMotor.Direction.REVERSE);
+//        flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(700, 3, 200, 0));
 
@@ -504,6 +506,9 @@ public class TeleOpRedRR extends LinearOpMode {
             axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
             lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
         }
+
+        axial *= -1;
+        lateral *= -1;
 
         double denominator = Math.max(Math.abs(axial) + Math.abs(lateral) + Math.abs(yaw), 1);
 

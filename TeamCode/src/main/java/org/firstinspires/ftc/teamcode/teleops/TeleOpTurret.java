@@ -32,10 +32,10 @@ public class TeleOpTurret extends LinearOpMode {
     public static double blockerPosClosed = .11;
     public static double blockerPosOpened = .52;
 
-    public static double launchTimerDelayToIntake_FAR = 400; //ms
-    public static double launchTimerDelayToPassthrough_FAR = 10; //ms
-    public static double launchTimerDelayToIntake_CLOSE = 250; //ms
-    public static double launchTimerDelayToPassthrough_CLOSE = 5; //ms
+    public static double launchTimerDelayToIntake_FAR = 0; //ms
+    public static double launchTimerDelayToPassthrough_FAR = 0; //ms
+    public static double launchTimerDelayToIntake_CLOSE = 100; //ms
+    public static double launchTimerDelayToPassthrough_CLOSE = 0; //ms
     private static double launchTimerDelayToIntake = launchTimerDelayToIntake_FAR; //ms
     private static double launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_FAR; //ms
 
@@ -43,17 +43,17 @@ public class TeleOpTurret extends LinearOpMode {
     private ElapsedTime passthroughTimer = new ElapsedTime();
 
     public static double INTAKE_POWER = 1.0;
-    public static double PASSTHROUGH_POWER_CLOSE = 1.0;
-    public static double PASSTHROUGH_POWER_FAR = 0.5;
+    public static double PASSTHROUGH_POWER_CLOSE = 0.7;
+    public static double PASSTHROUGH_POWER_FAR = 0.32;
     private static double passthroughPower = PASSTHROUGH_POWER_FAR;
 
-    public static double CLOSE_VEL = 960;
-    public static double MED_VEL = 1180;
-    public static double FAR_VEL = 1490;
+    public static double CLOSE_VEL = 1400;
+    public static double MED_VEL = 1560;
+    public static double FAR_VEL = 2140;
 
     public static double CLOSE_ANG = 1;
-    public static double MED_ANG = 0.3;
-    public static double FAR_ANG = 0;
+    public static double MED_ANG = 0.75;
+    public static double FAR_ANG = 0.35;
     
     public static double YAW_STRENGTH = 0.85;
     public static double AUTOAIM_STICK_STRENGTH_FAR = 0.14;
@@ -113,10 +113,14 @@ public class TeleOpTurret extends LinearOpMode {
     public static double MAX_HEADING = Math.toRadians(100.0);
     public static double MIN_HEADING = Math.toRadians(-100.0);
 
+    public static double TURRET_ERROR_THRESHOLD = 0.3;
+
     public static double POWER_CAP = 1;
 
     public static double AIM_X = -72;
-    public static double AIM_Y = 72;
+    public static double AIM_Y = 66;
+
+    public static double LIMELIGHT_FAR_OFFSET = -2;
 
     public static double PID_P = 1;
 //    public static double PID_I = 0;
@@ -164,7 +168,7 @@ public class TeleOpTurret extends LinearOpMode {
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
 //        flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(500, 3, 0, 0));
+        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(600, 0.5, 30, 10));
 
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
         passthrough.setDirection(DcMotor.Direction.REVERSE);
@@ -293,7 +297,11 @@ public class TeleOpTurret extends LinearOpMode {
                 flywheel.setVelocity(flywheelTarVel);
             }
 
-            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) > 20) {
+            double vagueError = wrapHeading(Math.atan2(AIM_Y - pose.position.y, AIM_X - pose.position.x)- pose.heading.toDouble()+ Math.toRadians(180)) - turretHeading;
+
+            telemetry.addData("vague error", vagueError);
+
+            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) > 20 && Math.abs(vagueError) > TURRET_ERROR_THRESHOLD) {
                 gamepad2.rumble(0.5, 0.5, 50);
                 telemetry.addData("rumble2: ", "is rumbling");
             }
@@ -476,10 +484,13 @@ public class TeleOpTurret extends LinearOpMode {
 
             result = limelight.getLatestResult();
             double tx = 0;
-            double errorHeading;
             if (limelightActive && result != null && result.isValid()) {
 
                 tx = result.getTx();
+
+                if (flywheelTarVel == FAR_VEL) {
+                    tx -= LIMELIGHT_FAR_OFFSET;
+                }
 
                 errorHeading = wrapHeading(-LL_P * tx);
 //                errorHeading = -LL_P * Math.sqrt(Math.abs(tx)) * Math.signum(tx);
@@ -501,7 +512,7 @@ public class TeleOpTurret extends LinearOpMode {
                 robotHeading = pose.heading.toDouble();
                 turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
                 goalHeading = Math.atan2(AIM_Y - pose.position.y, AIM_X - pose.position.x);
-                targetTurretHeading = wrapHeading(goalHeading - robotHeading);
+                targetTurretHeading = wrapHeading(goalHeading - robotHeading + Math.toRadians(180));
 
                 if (targetTurretHeading > MAX_HEADING)
                     targetTurretHeading = MAX_HEADING;
@@ -512,8 +523,9 @@ public class TeleOpTurret extends LinearOpMode {
 
                 errorHeading = targetTurretHeading - turretHeading;
 
-                if (Math.abs(errorHeading) <= Math.toRadians(40)) {
+                if (Math.abs(errorHeading) <= Math.toRadians(40) && limelightActive) {
                     limelight.start();
+                    limelight.pipelineSwitch(1); // locate ID 24 (red goal)
                 }
             }
 
@@ -549,21 +561,22 @@ public class TeleOpTurret extends LinearOpMode {
                     }
                 }
 
-            } else if (y1Prev != gamepad1.y) {
-
-                y1Prev = gamepad1.y;
-
-                if (y1Prev) { // this code only runs when the button is pressed, not released
-                    if (driveState == DriveState.autoAim) {
-                        driveState = DriveState.fieldCentric;
-                    } else {
-                        driveState = DriveState.autoAim;
-                    }
-                }
-
             }
+//            else if (y1Prev != gamepad1.y) {
+//
+//                y1Prev = gamepad1.y;
+//
+//                if (y1Prev) { // this code only runs when the button is pressed, not released
+//                    if (driveState == DriveState.autoAim) {
+//                        driveState = DriveState.fieldCentric;
+//                    } else {
+//                        driveState = DriveState.autoAim;
+//                    }
+//                }
+//
+//            }
 
-            if (driveState == DriveState.autoAim) {
+            if (Math.abs(vagueError) <= TURRET_ERROR_THRESHOLD) {
                 gamepad1.rumble(0.3, 0.3, 50);
                 telemetry.addData("rumble1: ", "is rumbling");
             }
@@ -623,15 +636,15 @@ public class TeleOpTurret extends LinearOpMode {
             yaw = -gamepad1.right_stick_x;
             axial = -gamepad1.left_stick_y;
             lateral = gamepad1.left_stick_x;
+
+            axial *= -1;
+            lateral *= -1;
         } else if (driveState == DriveState.autoAim) {
             yaw = locateGoal() - autoaim_stick_strength * (-gamepad2.right_stick_x);
             yaw = Math.min(Math.max(-yaw, -1.2), 1.2);
             axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
             lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
         }
-
-        axial *= -1;
-        lateral *= -1;
 
         double denominator = Math.max(Math.abs(axial) + Math.abs(lateral) + Math.abs(yaw), 1);
 

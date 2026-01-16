@@ -24,7 +24,7 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
     public static double timePause = 30; // milliseconds
     public static double weight = 0.1;
 
-    public static double tune0_pVal = 10;
+    public static double tune0_pVal = 0;
     public static double tune1_iVal = 0;
     public static double tune2_dVal = 0;
     public static double tune3_fVal = 0;
@@ -33,10 +33,10 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
 
     private ElapsedTime timeChange = new ElapsedTime();
 
-    private static double blockerPosClosed = .59;
-    private static double blockerPosOpened = .78;
+    private static double blockerPosClosed = .11;
+    private static double blockerPosOpened = .52;
 
-    private static double launchTimerDelayToIntake = 600; //ms
+    private static double launchTimerDelayToIntake = 400; //ms
     private static double launchTimerDelayToPassthrough = 10; //ms
 
     private ElapsedTime passthroughTimer = new ElapsedTime();
@@ -44,13 +44,13 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
     private static double INTAKE_POWER = 1.0;
     private static double PASSTHROUGH_POWER = 0.5;
 
-    private static double CLOSE_VEL = 1000;
-    private static double MED_VEL = 1360;
-    private static double FAR_VEL = 1580;
+    private static double CLOSE_VEL = 1400;
+    private static double MED_VEL = 1560;
+    private static double FAR_VEL = 2140;
 
     private static double CLOSE_ANG = 1;
-    private static double MED_ANG = 0;
-    private static double FAR_ANG = 0;
+    private static double MED_ANG = 0.75;
+    private static double FAR_ANG = 0.35;
 
     private DcMotor intake;
     private DcMotor passthrough;
@@ -81,7 +81,7 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
         telemetry.addData("status", "initialized");
 
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
-        flywheel.setDirection(DcMotor.Direction.REVERSE);
+//        flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");

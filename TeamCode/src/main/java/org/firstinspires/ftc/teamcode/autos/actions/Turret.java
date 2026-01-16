@@ -132,7 +132,7 @@ public class Turret {
             }
 
 //            power = PID_P * errorHeading;
-            power = PID_P * Math.sqrt(Math.abs(errorHeading)) * Math.signum(errorHeading);
+            double power = PID_P * Math.sqrt(Math.abs(errorHeading)) * Math.signum(errorHeading);
 
             if (power > POWER_CAP)
                 power = POWER_CAP;
@@ -140,7 +140,9 @@ public class Turret {
                 power = -POWER_CAP;
 
             turretMotor.setPower(power);
-            return true;
+
+
+            return followGoalTimer.seconds() < 28.5;
         }
     }
 

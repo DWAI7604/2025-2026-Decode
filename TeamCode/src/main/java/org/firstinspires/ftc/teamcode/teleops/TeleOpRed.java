@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
 import com.acmerobotics.roadrunner.Pose2d;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -16,12 +18,9 @@ import org.firstinspires.ftc.teamcode.PoseStorage;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-
-@Disabled
-@TeleOp(name="TeleOp - ASSEMBLY", group="Linear OpMode")
+@TeleOp(name="*TeleOp - RED")
 @Configurable
-public class TeleOpAssembly extends LinearOpMode {
+public class TeleOpRed extends LinearOpMode {
 
     public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
 
@@ -30,25 +29,37 @@ public class TeleOpAssembly extends LinearOpMode {
     private PinpointLocalizer localizer;
     private Pose2d pose;
 
-    public static double blockerPosClosed = .59;
-    public static double blockerPosOpened = .78;
+    public static double blockerPosClosed = .11;
+    public static double blockerPosOpened = .52;
 
-    public static double launchTimerDelayToIntake = 10; //ms
-    public static double launchTimerDelayToPassthrough = 10; //ms
+    public static double launchTimerDelayToIntake_FAR = 0; //ms
+    public static double launchTimerDelayToPassthrough_FAR = 0; //ms
+    public static double launchTimerDelayToIntake_CLOSE = 100; //ms
+    public static double launchTimerDelayToPassthrough_CLOSE = 0; //ms
+    private static double launchTimerDelayToIntake = launchTimerDelayToIntake_FAR; //ms
+    private static double launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_FAR; //ms
 
     public static double limSwitchDelayToPassthrough = 250; // ms
     private ElapsedTime passthroughTimer = new ElapsedTime();
 
     public static double INTAKE_POWER = 1.0;
-    public static double PASSTHROUGH_POWER = 0.5;
+    public static double PASSTHROUGH_POWER_CLOSE = 0.7;
+    public static double PASSTHROUGH_POWER_FAR = 0.32;
+    private static double passthroughPower = PASSTHROUGH_POWER_FAR;
 
-    public static double CLOSE_VEL = 1020;
-    public static double MED_VEL = 1180;
-    public static double FAR_VEL = 1480;
+    public static double CLOSE_VEL = 1400;
+    public static double MED_VEL = 1560;
+    public static double FAR_VEL = 2140;
 
     public static double CLOSE_ANG = 1;
-    public static double MED_ANG = 0.3;
-    public static double FAR_ANG = 0;
+    public static double MED_ANG = 0.75;
+    public static double FAR_ANG = 0.35;
+    
+    public static double YAW_STRENGTH = 0.85;
+    public static double AUTOAIM_STICK_STRENGTH_FAR = 0.14;
+    public static double AUTOAIM_STICK_STRENGTH_CLOSE = 0.2;
+
+    private double autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_FAR;
 
     private DcMotor leftFrontDriveMotor;
     private DcMotor leftBackDriveMotor;
@@ -68,11 +79,14 @@ public class TeleOpAssembly extends LinearOpMode {
     private IntakeState intakeState = IntakeState.off;
     private ElapsedTime launchTimer = new ElapsedTime();
 
+    private boolean blockerClosedPrimary = true;
+    private boolean blockerClosedSecondary = true;
     private boolean launching = false;
     private boolean ballReady = false;
     private boolean firstPass = true;
 
     private DriveState driveState = DriveState.fieldCentric;
+    private ShotLocation shotLocation = ShotLocation.far;
 
     private boolean a1Prev = false;
     private boolean b1Prev = false;
@@ -87,6 +101,48 @@ public class TeleOpAssembly extends LinearOpMode {
     private boolean dpadLeft2Prev = false;
     private boolean dpadRight2Prev = false;
     private boolean bumperR2Prev = false;
+    private boolean bumperL2Prev = false;
+    private boolean triggerR1Prev = false;
+
+    // TURRET
+
+    private static double TICKS_PER_REV = 384.5;
+    private static double TURRET_GEAR_RATIO = 24.0 / 136.0;
+    public static double FUDGE = 6.2824155667973;
+
+    public static double MAX_HEADING = Math.toRadians(100.0);
+    public static double MIN_HEADING = Math.toRadians(-100.0);
+
+    public static double TURRET_ERROR_THRESHOLD = 0.3;
+
+    public static double POWER_CAP = 1;
+
+    public static double AIM_X = -72;
+    public static double AIM_Y = 66;
+
+    public static double LIMELIGHT_FAR_OFFSET = -2;
+
+    public static double PID_P = 1;
+//    public static double PID_I = 0;
+//    public static double PID_D = 0;
+
+    public static double LL_P = 0.006;
+
+    private Limelight3A limelight;
+    private LLResult result;
+    public static boolean limelightActive = true;
+
+    private DcMotorEx turretMotor;
+
+    private double robotHeading;
+    private double turretHeading = 0;
+    private double goalHeading;
+    private double targetTurretHeading;
+    private double errorHeading;
+
+    private ElapsedTime timer = new ElapsedTime();
+
+    private double power = 0;
 
     public void runOpMode() {
 
@@ -110,9 +166,9 @@ public class TeleOpAssembly extends LinearOpMode {
 
         //Establish hardware properties for other devices
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
-        flywheel.setDirection(DcMotor.Direction.REVERSE);
+//        flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(800, 0.2, 0, 0));
+        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(600, 0.5, 30, 10));
 
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
         passthrough.setDirection(DcMotor.Direction.REVERSE);
@@ -126,6 +182,21 @@ public class TeleOpAssembly extends LinearOpMode {
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
 
         limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
+
+        // TURRET
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(1); // locate ID 24 (red goal)
+        limelight.setPollRateHz(100);
+        limelight.start();
+        limelight.pipelineSwitch(1); // locate ID 24 (red goal)
+
+        turretMotor = hardwareMap.get(DcMotorEx.class, "turret");
+        turretMotor.setDirection(DcMotor.Direction.REVERSE);
+//        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(700, 3, 200, 0));
+        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
+        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
 
         waitForStart();
 
@@ -161,9 +232,13 @@ public class TeleOpAssembly extends LinearOpMode {
                 a2Prev = gamepad2.a;
 
                 if (a2Prev) { // CLOSE
-                    flywheelPower = 1;
+                    autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
+                    passthroughPower = PASSTHROUGH_POWER_CLOSE;
+                    launchTimerDelayToIntake = launchTimerDelayToIntake_CLOSE;
+                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_CLOSE;
+                    flywheelPower = 0.525;
                     flywheelTarVel = CLOSE_VEL;
-                    angleAdjust = 1;
+                    angleAdjust = CLOSE_ANG;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -171,9 +246,13 @@ public class TeleOpAssembly extends LinearOpMode {
                 x2Prev = gamepad2.x;
 
                 if (x2Prev) { // MEDIUM
-                    flywheelPower = 1;
+                    autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
+                    passthroughPower = PASSTHROUGH_POWER_CLOSE;
+                    launchTimerDelayToIntake = launchTimerDelayToIntake_CLOSE;
+                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_CLOSE;
+                    flywheelPower = 0.60;
                     flywheelTarVel = MED_VEL;
-                    angleAdjust = 0.5;
+                    angleAdjust = MED_ANG;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -181,9 +260,13 @@ public class TeleOpAssembly extends LinearOpMode {
                 y2Prev = gamepad2.y;
 
                 if (y2Prev) { // FAR
-                    flywheelPower = 1;
+                    autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_FAR;
+                    passthroughPower = PASSTHROUGH_POWER_FAR;
+                    launchTimerDelayToIntake = launchTimerDelayToIntake_FAR;
+                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_FAR;
+                    flywheelPower = 0.725;
                     flywheelTarVel = FAR_VEL;
-                    angleAdjust = 0;
+                    angleAdjust = FAR_ANG;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -194,7 +277,7 @@ public class TeleOpAssembly extends LinearOpMode {
 
                 if (dpadUp2Prev) {
                     flywheelPower += 0.025;
-                    flywheelTarVel += 20;
+                    flywheelTarVel += 10;
                     updateFlywheel = true;
                 }
             } else if (gamepad2.dpad_down != dpadDown2Prev) {
@@ -202,16 +285,25 @@ public class TeleOpAssembly extends LinearOpMode {
 
                 if (dpadDown2Prev) {
                     flywheelPower -= 0.025;
-                    flywheelTarVel -= 20;
+                    flywheelTarVel -= 10;
                     updateFlywheel = true;
                 }
             }
 
             if (updateFlywheel) {
 //                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
-                flywheel.setPower(flywheelPower);
+//                flywheel.setPower(flywheelPower);
 
-//                flywheel.setVelocity(flywheelTarVel);
+                flywheel.setVelocity(flywheelTarVel);
+            }
+
+            double vagueError = wrapHeading(Math.atan2(AIM_Y - pose.position.y, AIM_X - pose.position.x)- pose.heading.toDouble()+ Math.toRadians(180)) - turretHeading;
+
+            telemetry.addData("vague error", vagueError);
+
+            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) > 20 && Math.abs(vagueError) > TURRET_ERROR_THRESHOLD) {
+                gamepad2.rumble(0.5, 0.5, 50);
+                telemetry.addData("rumble2: ", "is rumbling");
             }
 
             // ===== LAUNCH =====
@@ -232,7 +324,8 @@ public class TeleOpAssembly extends LinearOpMode {
                 } else {
                     intake.setPower(0);
                     passthrough.setPower(0);
-                    blocker.setPosition(blockerPosClosed);
+//                    blocker.setPosition(blockerPosClosed);
+                    blockerClosedPrimary = true;
                     launching = false;
                 }
             }
@@ -241,10 +334,11 @@ public class TeleOpAssembly extends LinearOpMode {
 
                 ballReady = false;
 
-                blocker.setPosition(blockerPosOpened);
+//                blocker.setPosition(blockerPosOpened);
+                blockerClosedPrimary = false;
 
                 if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
-                    passthrough.setPower(PASSTHROUGH_POWER);
+                    passthrough.setPower(passthroughPower);
                 }
 
                 if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
@@ -253,8 +347,16 @@ public class TeleOpAssembly extends LinearOpMode {
 
             }
 
+            blockerClosedSecondary = !gamepad2.left_bumper;
+
+            if (!blockerClosedPrimary || !blockerClosedSecondary) {
+                blocker.setPosition(blockerPosOpened);
+            } else {
+                blocker.setPosition(blockerPosClosed);
+            }
+
             // ===== LIMIT SWITCH TURNING OFF PASSTHROUGH =====
-            if (limitSwitchIsPressed) {
+            if (limitSwitchIsPressed && intakeState != IntakeState.reject) {
                 ballReady = true;
             }
 
@@ -278,6 +380,27 @@ public class TeleOpAssembly extends LinearOpMode {
              * A toggles between intaking
              * B toggles between rejecting
             \*/
+
+            if (triggerR1Prev != (gamepad1.right_trigger > 0.5)) {
+
+                triggerR1Prev = gamepad1.right_trigger > 0.5;
+
+                if (triggerR1Prev) {
+                    if (intakeState == IntakeState.on) {
+                        intake.setPower(0);
+                        intakeState = IntakeState.off;
+                    } else {
+                        intake.setPower(INTAKE_POWER);
+                        intakeState = IntakeState.on;
+
+                        if (!ballReady) {
+                            passthrough.setPower(passthroughPower);
+                        }
+                    }
+                }
+
+            }
+
             if (a1Prev != gamepad1.a) {
 
                 a1Prev = gamepad1.a;
@@ -291,7 +414,7 @@ public class TeleOpAssembly extends LinearOpMode {
                         intakeState = IntakeState.on;
 
                         if (!ballReady) {
-                            passthrough.setPower(PASSTHROUGH_POWER);
+                            passthrough.setPower(passthroughPower);
                         }
                     }
                 }
@@ -303,10 +426,13 @@ public class TeleOpAssembly extends LinearOpMode {
                 if (b1Prev) {
                     if (intakeState == IntakeState.reject) {
                         intake.setPower(0);
+                        passthrough.setPower(passthroughPower);
                         intakeState = IntakeState.off;
                     } else {
                         intake.setPower(-INTAKE_POWER);
                         intakeState = IntakeState.reject;
+                        passthrough.setPower(-passthroughPower);
+                        ballReady = false;
                     }
                 }
 
@@ -320,11 +446,11 @@ public class TeleOpAssembly extends LinearOpMode {
              * dpad down rejects the artifact
             \*/
             if (gamepad1.dpad_up) {
-                passthrough.setPower(PASSTHROUGH_POWER);
+                passthrough.setPower(passthroughPower);
             } else if (gamepad1.dpad_right) {
                 passthrough.setPower(0);
             } else if (gamepad1.dpad_down) {
-                passthrough.setPower(-PASSTHROUGH_POWER);
+                passthrough.setPower(-passthroughPower);
             }
 
             // ===== ADJUST ANGLE OF FLYWHEEL =====
@@ -354,9 +480,68 @@ public class TeleOpAssembly extends LinearOpMode {
                 angleAdjustServo.setPosition(angleAdjust);
             }
 
+            // ===== TURRET =====
+
+            result = limelight.getLatestResult();
+            double tx = 0;
+            if (limelightActive && result != null && result.isValid()) {
+
+                tx = result.getTx();
+
+                if (flywheelTarVel == FAR_VEL) {
+                    tx -= LIMELIGHT_FAR_OFFSET;
+                }
+
+                errorHeading = wrapHeading(-LL_P * tx);
+//                errorHeading = -LL_P * Math.sqrt(Math.abs(tx)) * Math.signum(tx);
+
+                // checking for range cap
+                turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
+                if (turretHeading + errorHeading > MAX_HEADING) {
+                    errorHeading = MAX_HEADING - turretHeading;
+                } else if (turretHeading + errorHeading < MIN_HEADING) {
+                    errorHeading = MIN_HEADING - turretHeading;
+                }
+
+                if (Math.abs(errorHeading) > Math.toRadians(40)) {
+                    limelight.stop();
+                }
+
+            } else {
+
+                robotHeading = pose.heading.toDouble();
+                turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
+                goalHeading = Math.atan2(AIM_Y - pose.position.y, AIM_X - pose.position.x);
+                targetTurretHeading = wrapHeading(goalHeading - robotHeading + Math.toRadians(180));
+
+                if (targetTurretHeading > MAX_HEADING)
+                    targetTurretHeading = MAX_HEADING;
+                else if (targetTurretHeading < MIN_HEADING)
+                    targetTurretHeading = MIN_HEADING;
+
+//              targetTurretHeading = Math.toRadians(timer.seconds() / 10.0 * 360);
+
+                errorHeading = targetTurretHeading - turretHeading;
+
+                if (Math.abs(errorHeading) <= Math.toRadians(40) && limelightActive) {
+                    limelight.start();
+                    limelight.pipelineSwitch(1); // locate ID 24 (red goal)
+                }
+            }
+
+//            power = PID_P * errorHeading;
+            power = PID_P * Math.sqrt(Math.abs(errorHeading)) * Math.signum(errorHeading);
+
+            if (power > POWER_CAP)
+                power = POWER_CAP;
+            else if (power < -POWER_CAP)
+                power = -POWER_CAP;
+
+            turretMotor.setPower(power);
+
             // ===== RESET POSITION OF ROBOT =====
             if (gamepad1.left_bumper && gamepad1.right_bumper) {
-                localizer.setPose( new Pose2d(72 - 9, -72 + 30, -PI_CONST / 2.0) );
+                localizer.setPose( new Pose2d(72 - 8, -72 + 30, -PI_CONST / 2.0) );
             }
 
             // ===== DRIVE THE ROBOT =====
@@ -376,19 +561,26 @@ public class TeleOpAssembly extends LinearOpMode {
                     }
                 }
 
-            } else if (y1Prev != gamepad1.y) {
-
-                y1Prev = gamepad1.y;
-
-                if (y1Prev) { // this code only runs when the button is pressed, not released
-                    if (driveState == DriveState.autoAim) {
-                        driveState = DriveState.fieldCentric;
-                    } else {
-                        driveState = DriveState.autoAim;
-                    }
-                }
-
             }
+//            else if (y1Prev != gamepad1.y) {
+//
+//                y1Prev = gamepad1.y;
+//
+//                if (y1Prev) { // this code only runs when the button is pressed, not released
+//                    if (driveState == DriveState.autoAim) {
+//                        driveState = DriveState.fieldCentric;
+//                    } else {
+//                        driveState = DriveState.autoAim;
+//                    }
+//                }
+//
+//            }
+
+            if (Math.abs(vagueError) <= TURRET_ERROR_THRESHOLD) {
+                gamepad1.rumble(0.3, 0.3, 50);
+                telemetry.addData("rumble1: ", "is rumbling");
+            }
+
             mecanumDrive();
 
 //            telemetry.addData("Power", flywheelPower);
@@ -403,8 +595,25 @@ public class TeleOpAssembly extends LinearOpMode {
             panelsTelemetry.getTelemetry().addData("flywheel velocity", flywheel.getVelocity());
             panelsTelemetry.getTelemetry().addData("flywheel target", flywheelTarVel);
 //            panelsTelemetry.getTelemetry().addData("feeder position", feeder.getPosition());
+
+            panelsTelemetry.getTelemetry().addData("robotHeading", Math.toDegrees(robotHeading));
+            panelsTelemetry.getTelemetry().addData("goalHeading", Math.toDegrees(goalHeading));
+            panelsTelemetry.getTelemetry().addData("turretHeading", Math.toDegrees(turretHeading));
+            panelsTelemetry.getTelemetry().addData("targetTurretHeading", Math.toDegrees(targetTurretHeading));
+            panelsTelemetry.getTelemetry().addData("errorHeading", Math.toDegrees(errorHeading));
+
+            panelsTelemetry.getTelemetry().addData("tx", tx);
+
+            panelsTelemetry.getTelemetry().addData("power", power);
+
+            panelsTelemetry.getTelemetry().addData("posX", pose.position.x);
+            panelsTelemetry.getTelemetry().addData("posY", pose.position.y);
             panelsTelemetry.getTelemetry().update();
         }
+    }
+
+    public double wrapHeading (double heading) {
+        return (heading + Math.PI) % (2*Math.PI) - Math.PI;
     }
 
     private void mecanumDrive () {
@@ -425,11 +634,14 @@ public class TeleOpAssembly extends LinearOpMode {
             lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
         } else if (driveState == DriveState.robotCentric) {
             yaw = -gamepad1.right_stick_x;
-            axial = gamepad1.left_stick_y;
-            lateral = -gamepad1.left_stick_x;
+            axial = -gamepad1.left_stick_y;
+            lateral = gamepad1.left_stick_x;
+
+            axial *= -1;
+            lateral *= -1;
         } else if (driveState == DriveState.autoAim) {
-            yaw = locateGoal();
-            yaw = Math.min(Math.max(-yaw, -1.0), 1.0);
+            yaw = locateGoal() - autoaim_stick_strength * (-gamepad2.right_stick_x);
+            yaw = Math.min(Math.max(-yaw, -1.2), 1.2);
             axial = (gamepad1.left_stick_y * Math.cos(heading) + gamepad1.left_stick_x * Math.sin(heading));
             lateral = (gamepad1.left_stick_y * Math.sin(heading) - gamepad1.left_stick_x * Math.cos(heading));
         }
@@ -484,7 +696,7 @@ public class TeleOpAssembly extends LinearOpMode {
 
         telemetry.addData("goalHeading", goalHeading);
 
-        yaw = (robotHeading - goalHeading) * .50;
+        yaw = (robotHeading - goalHeading) * YAW_STRENGTH;
 
         return yaw;
 
@@ -496,5 +708,9 @@ public class TeleOpAssembly extends LinearOpMode {
 
     enum IntakeState {
         off, on, reject
+    }
+
+    enum ShotLocation {
+        far, medium, close
     }
 }

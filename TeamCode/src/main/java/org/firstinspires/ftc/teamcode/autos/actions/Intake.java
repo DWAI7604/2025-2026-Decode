@@ -17,7 +17,7 @@ public class Intake {
     private TouchSensor limitSwitch;
 
     private static double INTAKE_POWER = 1.0;
-    private static double PASSTHROUGH_POWER = 0.5;
+    private static double PASSTHROUGH_POWER = 1.0;
 
     public static double limSwitchDelayToPassthrough = 250; // ms
 
@@ -36,14 +36,9 @@ public class Intake {
         private boolean initialized1 = false;
         private ElapsedTime timer1 = new ElapsedTime();
         private double milliseconds1;
-        private boolean reversed = false;
 
         public IntakeIn(double milliseconds) {
             this.milliseconds1 = milliseconds;
-        }
-        public IntakeIn(double milliseconds, boolean reversed) {
-            this.milliseconds1 = milliseconds;
-            this.reversed = reversed;
         }
 
         @Override
@@ -52,49 +47,11 @@ public class Intake {
                 initialized1 = true;
                 timer1.reset();
 
-                if (reversed)
-                    intake.setPower(-INTAKE_POWER);
-                else
-                    intake.setPower(INTAKE_POWER);
+                intake.setPower(INTAKE_POWER);
             }
 
             if (timer1.milliseconds() > milliseconds1) {
                 intake.setPower(0);
-                return false;
-            }
-
-            return true;
-        }
-    }
-
-    public class TransferIn implements Action {
-        private boolean initialized2 = false;
-        private ElapsedTime timer2 = new ElapsedTime();
-        private double milliseconds2;
-        private boolean reversed = false;
-
-        public TransferIn(double milliseconds) {
-            this.milliseconds2 = milliseconds;
-        }
-        public TransferIn(double milliseconds, boolean reversed) {
-            this.milliseconds2 = milliseconds;
-            this.reversed = reversed;
-        }
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet) {
-            if (!initialized2) {
-                initialized2 = true;
-                timer2.reset();
-
-                if (reversed)
-                    passthrough.setPower(-PASSTHROUGH_POWER);
-                else
-                    passthrough.setPower(PASSTHROUGH_POWER);
-            }
-
-            if (timer2.milliseconds() > milliseconds2) {
-                passthrough.setPower(0);
                 return false;
             }
 
@@ -141,16 +98,6 @@ public class Intake {
 
     public Action intakeIn(double milliseconds) {
         return new IntakeIn(milliseconds);
-    }
-    public Action intakeIn(double milliseconds, boolean reversed) {
-        return new IntakeIn(milliseconds, reversed);
-    }
-
-    public Action transferIn(double milliseconds) {
-        return new TransferIn(milliseconds);
-    }
-    public Action transferIn(double milliseconds, boolean reversed) {
-        return new TransferIn(milliseconds, reversed);
     }
 
     public Action passthrough () { return new Passthrough(); }

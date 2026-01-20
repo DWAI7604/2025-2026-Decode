@@ -12,30 +12,30 @@ public class MeepMeepTesting {
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                .setConstraints(80, 80, Math.toRadians(180), Math.toRadians(180), 14)
+                .setConstraints(80, 80, Math.toRadians(180), Math.toRadians(180), 17)
                 .build();
 
         // ====================== INDEPENDENT FAR
-//        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(63.5, 15 / 2.0, 0))
+//        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(72 - 17.0/2.0, 3 + 14 / 2.0, 0))
 //                .setReversed(true)
-//                .splineToLinearHeading(new Pose2d(new Vector2d(57, 17), -0.38 ), 0)
+////                .splineToLinearHeading(new Pose2d(new Vector2d(57, 17), -0.38 ), 0)
 //                .waitSeconds(1) // LAUNCH 3 BALLS
 //                .setReversed(true)
-//                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/2, 28), Math.toRadians(90)), Math.toRadians(90))
-//                .lineToYConstantHeading(63)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(72/2.0, 28), Math.toRadians(90)), Math.toRadians(90))
+//                .lineToYConstantHeading(58.5)
 //                .setReversed(true)
-//                .splineToLinearHeading(new Pose2d(new Vector2d(57, 17), -0.38), 0)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(57, 17), Math.toRadians(45)), 0)
 //                .waitSeconds(1) // LAUNCH 3 BALLS
-////                .setReversed(true)
-////                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6, 28), Math.toRadians(90)), Math.toRadians(90))
-////                .lineToYConstantHeading(60)
-////                .setReversed(true)
-////                .splineToLinearHeading(new Pose2d(new Vector2d(55, 18), -0.38), 0)
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6, 28), Math.toRadians(90)), Math.toRadians(90))
+//                .lineToYConstantHeading(58.5)
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(57, 17), Math.toRadians(45)), 0)
 ////                .waitSeconds(1) // LAUNCH 3 BALLS
-//                .setReversed(true)
-//                .splineToLinearHeading(new Pose2d(new Vector2d(64.5, 38), Math.toRadians(90)), Math.toRadians(90))
-//                        .waitSeconds(0.001)
-//                        .lineToYConstantHeading(63)
+////                .setReversed(true)
+////                .splineToLinearHeading(new Pose2d(new Vector2d(64.5, 38), Math.toRadians(90)), Math.toRadians(90))
+////                        .waitSeconds(0.001)
+////                        .lineToYConstantHeading(63)
 //                .build());
 
         // ====================== SOLO FAR
@@ -61,34 +61,53 @@ public class MeepMeepTesting {
 //                .splineToLinearHeading(new Pose2d(new Vector2d(64.5, 38), Math.toRadians(90)), 0)
 //                .build());
 
+//        // ====================== GATE CLOSE
+//        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-61, 44, Math.toRadians(-55)))
+//                .splineToLinearHeading(new Pose2d(-40, 17, Math.toRadians(0)), 0)
+//                .waitSeconds(1) // LAUNCH 3 BALLS
+//                .splineTo(new Vector2d(-70.0/6, 28), Math.toRadians(90))
+//                .lineToYConstantHeading(52)
+//                .lineToYConstantHeading(42)
+//                .splineToLinearHeading(new Pose2d(-70.0/6 + 8, 52, Math.toRadians(0)), Math.toRadians(90)) // HIT GATE
+//                .lineToYConstantHeading(48)
+//                .setReversed(true)
+////                .lineToYConstantHeading(48)
+////                .splineToLinearHeading(new Pose2d(-40, 17, Math.toRadians(0)), 0)
+//                .splineTo(new Vector2d(-40, 17), Math.toRadians(180))
+//                .waitSeconds(1) // LAUNCH 3 BALLS
+////                .splineTo(new Vector2d(70.0/6, 33), Math.toRadians(90))
+////                .lineToYConstantHeading(58.5)
+////                .setReversed(true)
+////                .splineTo(new Vector2d(-40, 17), Math.toRadians(180))
+////                .waitSeconds(1) // LAUNCH 3 BALLS
+////                .splineTo(new Vector2d(70.0/6 + 24, 39), Math.toRadians(90))
+////                .lineToYConstantHeading(58.5)
+////                .setReversed(true)
+////                .splineTo(new Vector2d(-40, 17), Math.toRadians(180))
+////                .waitSeconds(1) // LAUNCH 3 BALLS
+//                .build());
+
+
         // ====================== INDEPENDENT CLOSE
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-61, 44, Math.toRadians(-55)))
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59))
-                .waitSeconds(1) // LAUNCH 3 BALLS
-                .splineTo(new Vector2d(-70.0/6 + 3, 24), Math.toRadians(90))
-                .lineToYConstantHeading(52)
-                        .lineToYConstantHeading(46)
-                .splineToLinearHeading(new Pose2d(-70.0/6 + 8, 52, Math.toRadians(180)), Math.toRadians(90)) // HIT GATE
-                                .lineToYConstantHeading(57)
-                                .lineToYConstantHeading(50)
-//                .splineToLinearHeading(new Pose2d((-70.0/6 + 3) + 3, 52 + 5, Math.toRadians(180)), 0) // HIT GATE
-                                .splineToLinearHeading(new Pose2d(-46, 24, Math.toRadians(-59)), 0)
+//        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-61, 44, Math.toRadians(-55)))
+//                .splineToLinearHeading(new Pose2d(-40, 17, Math.toRadians(0)), 0)
+//                .waitSeconds(1) // LAUNCH 3 BALLS
+//                .splineTo(new Vector2d(-70.0/6, 28), Math.toRadians(90))
+//                .lineToYConstantHeading(52)
 //                .setReversed(true)
-//                .splineToLinearHeading(new Pose2d(-46, 24, Math.toRadians((-59))), 0)
-                .waitSeconds(1) // LAUNCH 3 BALLS
-//                .splineTo(new Vector2d(70.0/6 + 4, 33), Math.toRadians(90))
+//                .splineTo(new Vector2d(-40, 17), Math.toRadians(180))
+//                .waitSeconds(1) // LAUNCH 3 BALLS
+//                .splineTo(new Vector2d(70.0/6, 33), Math.toRadians(90))
 //                .lineToYConstantHeading(58.5)
 //                .setReversed(true)
-//                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
+//                .splineTo(new Vector2d(-40, 17), Math.toRadians(180))
 //                .waitSeconds(1) // LAUNCH 3 BALLS
-//                .splineTo(new Vector2d(0, 14), Math.toRadians(0))
-//                .splineTo(new Vector2d(70.0/6 + 24 + 4, 33), Math.toRadians(90))
+//                .splineTo(new Vector2d(70.0/6 + 24, 39), Math.toRadians(90))
 //                .lineToYConstantHeading(58.5)
 //                .setReversed(true)
-//                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
+//                .splineTo(new Vector2d(-40, 17), Math.toRadians(180))
 //                .waitSeconds(1) // LAUNCH 3 BALLS
-                .splineTo(new Vector2d(-44, 14), Math.toRadians(-90))
-                .build());
+//                .build());
 
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_OFFICIAL)

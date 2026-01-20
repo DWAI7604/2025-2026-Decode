@@ -5,12 +5,11 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 //@Disabled
 @Configurable
-@TeleOp(name="*blocker = 0.5")
-public class MaxServo extends LinearOpMode {
+@TeleOp(name="blocker = 0.5")
+public class ResetBlocker extends LinearOpMode {
     private Servo servo;
 
 

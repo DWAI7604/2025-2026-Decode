@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
 import org.firstinspires.ftc.teamcode.autos.actions.Intake;
+import org.firstinspires.ftc.teamcode.autos.actions.Turret;
 
 @Autonomous(name="Indep - Close 6 - RED", group="Robot")
 public class CloseSixBallRed extends LinearOpMode {
@@ -28,35 +29,31 @@ public class CloseSixBallRed extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-61, 44, Math.toRadians(-55)));
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);
+        Turret turret = new Turret(hardwareMap);
 
         Action moveToLaunch = drive.actionBuilder(new Pose2d(-61, 44, Math.toRadians(-55)))
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59))
+                .splineToLinearHeading(new Pose2d(-40, 17, Math.toRadians(0)), 0)
                 .build();
 
-        Action moveThroughIntake1 = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
-                .splineTo(new Vector2d(-70.0/6 + 3, 24), Math.toRadians(90))
+        Action moveThroughIntake1 = drive.actionBuilder(new Pose2d(-40, 17, Math.toRadians(0)))
+                .splineTo(new Vector2d(-70.0/6, 28), Math.toRadians(90))
                 .lineToYConstantHeading(52,  kinematics.new WheelVelConstraint(55))
                 .setReversed(true)
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
+                .splineTo(new Vector2d(-40, 17), Math.toRadians(180))
                 .build();
 
-        Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
-                .splineTo(new Vector2d(70.0/6 + 4, 33), Math.toRadians(90))
+        Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(-40, 17, Math.toRadians(0)))
+                .splineTo(new Vector2d(70.0/6, 33), Math.toRadians(90))
                 .lineToYConstantHeading(58.5,  kinematics.new WheelVelConstraint(55))
                 .setReversed(true)
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
+                .splineTo(new Vector2d(-40, 17), Math.toRadians(180))
                 .build();
 
-        Action moveThroughIntake3 = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
-                .splineTo(new Vector2d(0, 14), Math.toRadians(0))
-                .splineTo(new Vector2d(70.0/6 + 24 + 4, 33), Math.toRadians(90))
+        Action moveThroughIntake3 = drive.actionBuilder(new Pose2d(-40, 17, Math.toRadians(0)))
+                .splineTo(new Vector2d(70.0/6 + 24, 39), Math.toRadians(90))
                 .lineToYConstantHeading(58.5,  kinematics.new WheelVelConstraint(55))
                 .setReversed(true)
-                .splineTo(new Vector2d(-46, 24), Math.toRadians(-59 + 180))
-                .build();
-
-        Action moveToPark = drive.actionBuilder(new Pose2d(-46, 24, Math.toRadians(-59)))
-                .splineTo(new Vector2d(-44, 14), Math.toRadians(-90))
+                .splineTo(new Vector2d(-40, 17), Math.toRadians(180))
                 .build();
 
         double delay = 0; // measured in seconds
@@ -102,32 +99,25 @@ public class CloseSixBallRed extends LinearOpMode {
                 new SequentialAction(
                         new SleepAction(delay),
 
-
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(980),
-                                flywheel.angle(1),
-                                flywheel.closeBlocker()
+                                flywheel.velocity(1560),
+                                flywheel.angle(0.75),
+                                flywheel.closeBlocker(),
+                                turret.followGoalRed(-40, 17, Math.toRadians(0))
                         ),
-                        flywheel.launch(),
-
+                        flywheel.launchClose(),
 
                         new ParallelAction(
                                 moveThroughIntake1,
                                 intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(980)
+                                flywheel.velocity(980),
+                                turret.followGoalRed(-40, 17, Math.toRadians(0))
                         ),
-                        flywheel.launch(),
+                        flywheel.launchClose(),
 
-
-                        // removed two intake runs for 6-ball variant
-
-
-                        new ParallelAction(
-                                flywheel.stopAll(),
-                                moveToPark
-                        )
+                        flywheel.stopAll()
                 )
         );
 

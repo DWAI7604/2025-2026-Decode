@@ -23,21 +23,24 @@ public class Flywheel {
     private Servo angleAdjustServo;
     private Servo blocker;
 
-    private static double blockerPosClosed = .59;
-    private static double blockerPosOpened = .78;
+    private static double blockerPosClosed = .11;
+    private static double blockerPosOpened = .52;
 
-    private static double launchTimerDelayToIntake = 600; //ms
-    private static double launchTimerDelayToPassthrough = 10; //ms
+    public static double launchTimerDelayToIntake_FAR = 0; //ms
+    public static double launchTimerDelayToPassthrough_FAR = 0; //ms
+    public static double launchTimerDelayToIntake_CLOSE = 100; //ms
+    public static double launchTimerDelayToPassthrough_CLOSE = 0; //ms
     private static double launchTimerDelayToEnd = 1900; // ms
 
     private static double INTAKE_POWER = 1.0;
-    private static double PASSTHROUGH_POWER = 0.5;
+    public static double PASSTHROUGH_POWER_CLOSE = 0.7;
+    public static double PASSTHROUGH_POWER_FAR = 0.32;
 
     public Flywheel(HardwareMap hardwareMap) {
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
-        flywheel.setDirection(DcMotor.Direction.REVERSE);
+//        flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(700, 3, 200, 0));
+        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(600, 0.5, 30, 10));
 
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
         passthrough.setDirection(DcMotor.Direction.REVERSE);
@@ -70,11 +73,11 @@ public class Flywheel {
 
             flywheel.setVelocity(velocity);
 
-            packet.put("1.target flywheel", velocity);
-            packet.put("2.velocity flywheel", flywheel.getVelocity());
-            packet.put("3.error flywheel", Math.abs( flywheel.getVelocity() - velocity ));
-//            packet.put("mode", "velocity");
-            packet.put("4.OUTPUT", Math.abs( flywheel.getVelocity() - velocity ) > 15);
+//            packet.put("1.target flywheel", velocity);
+//            packet.put("2.velocity flywheel", flywheel.getVelocity());
+//            packet.put("3.error flywheel", Math.abs( flywheel.getVelocity() - velocity ));
+////            packet.put("mode", "velocity");
+//            packet.put("4.OUTPUT", Math.abs( flywheel.getVelocity() - velocity ) > 15);
 
             if (Math.abs( flywheel.getVelocity() - velocity ) > 25) {
                 numOfCorrect = 0;
@@ -90,28 +93,58 @@ public class Flywheel {
         }
     }
 
-    public class Launch implements Action {
-        private boolean launchInitialized = false;
-        private ElapsedTime launchTimer = new ElapsedTime();
+    public class LaunchClose implements Action {
+        private boolean launchCloseInitialized = false;
+        private ElapsedTime launchCloseTimer = new ElapsedTime();
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            if (!launchInitialized) {
-                launchInitialized = true;
-                launchTimer.reset();
+            if (!launchCloseInitialized) {
+                launchCloseInitialized = true;
+                launchCloseTimer.reset();
             }
 
             blocker.setPosition(blockerPosOpened);
 
-            if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
-                passthrough.setPower(PASSTHROUGH_POWER);
+            if (launchCloseTimer.milliseconds() >= launchTimerDelayToPassthrough_CLOSE) {
+                passthrough.setPower(PASSTHROUGH_POWER_CLOSE);
             }
 
-            if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
+            if (launchCloseTimer.milliseconds() >= launchTimerDelayToIntake_CLOSE) {
                 intake.setPower(INTAKE_POWER);
             }
 
-            if (launchTimer.milliseconds() >= launchTimerDelayToEnd) {
+            if (launchCloseTimer.milliseconds() >= launchTimerDelayToEnd) {
+                blocker.setPosition(blockerPosClosed);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class LaunchFar implements Action {
+        private boolean launchFarInitialized = false;
+        private ElapsedTime launchFarTimer = new ElapsedTime();
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!launchFarInitialized) {
+                launchFarInitialized = true;
+                launchFarTimer.reset();
+            }
+
+            blocker.setPosition(blockerPosOpened);
+
+            if (launchFarTimer.milliseconds() >= launchTimerDelayToPassthrough_FAR) {
+                passthrough.setPower(PASSTHROUGH_POWER_FAR);
+            }
+
+            if (launchFarTimer.milliseconds() >= launchTimerDelayToIntake_FAR) {
+                intake.setPower(INTAKE_POWER);
+            }
+
+            if (launchFarTimer.milliseconds() >= launchTimerDelayToEnd) {
                 blocker.setPosition(blockerPosClosed);
                 return false;
             }
@@ -178,8 +211,11 @@ public class Flywheel {
     }
 
 
-    public Action launch() {
-        return new Launch();
+    public Action launchClose() {
+        return new LaunchClose();
+    }
+    public Action launchFar() {
+        return new LaunchFar();
     }
 
     public Action angle(double angle) {

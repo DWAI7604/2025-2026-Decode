@@ -4,14 +4,13 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 //@Disabled
 
 @Configurable
-@TeleOp(name="*angleAdjust = 0.0")
-public class ResetServo extends LinearOpMode {
+@TeleOp(name="angleAdjust = 0.0")
+public class ResetAngleAdjust extends LinearOpMode {
     private Servo servo;
 
 

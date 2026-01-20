@@ -54,11 +54,11 @@ public class Turret {
     private double targetTurretHeading;
     private double errorHeading;
 
-    public Turret(HardwareMap hardwareMap, Pose2d pose) {
+    public Turret(HardwareMap hardwareMap) {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1); // locate ID 24 (red goal)
         limelight.setPollRateHz(100);
-        limelight.start();
+//        limelight.start();
         limelight.pipelineSwitch(1); // locate ID 24 (red goal)
 
         turretMotor = hardwareMap.get(DcMotorEx.class, "turret");
@@ -68,16 +68,19 @@ public class Turret {
         turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
 
-        this.pose = pose;
+//        this.pose = pose;
     }
 
-    public class FollowGoal implements Action {
+    public class FollowGoalRed implements Action {
         private boolean followGoalInitialized = false;
-        private double robotHeading;
+        private double robotHeading, xPos, yPos;
+        private int numOfCorrect;
         private ElapsedTime followGoalTimer = new ElapsedTime();
 
-        public FollowGoal(double robotHeading) {
-            this.robotHeading = robotHeading;
+        public FollowGoalRed(double robotHeading, double xPos, double yPos) {
+            this.robotHeading = wrapHeading(robotHeading);
+            this.xPos = xPos;
+            this.yPos = yPos;
             followGoalInitialized = false;
         }
 
@@ -88,33 +91,33 @@ public class Turret {
                 followGoalTimer.reset();
             }
 
-            result = limelight.getLatestResult();
-            double tx = 0;
-            double errorHeading;
-            if (limelightActive && result != null && result.isValid()) {
+//            result = limelight.getLatestResult();
+//            double tx = 0;
+//            double errorHeading;
+//            if (limelightActive && result != null && result.isValid()) {
+//
+//                tx = result.getTx();
+//
+//                errorHeading = wrapHeading(-LL_P * tx);
+////                errorHeading = -LL_P * Math.sqrt(Math.abs(tx)) * Math.signum(tx);
+//
+//                // checking for range cap
+//                turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
+//                if (turretHeading + errorHeading > MAX_HEADING) {
+//                    errorHeading = MAX_HEADING - turretHeading;
+//                } else if (turretHeading + errorHeading < MIN_HEADING) {
+//                    errorHeading = MIN_HEADING - turretHeading;
+//                }
+//
+//                if (Math.abs(errorHeading) > Math.toRadians(40)) {
+//                    limelight.stop();
+//                }
+//
+//            } else {
 
-                tx = result.getTx();
-
-                errorHeading = wrapHeading(-LL_P * tx);
-//                errorHeading = -LL_P * Math.sqrt(Math.abs(tx)) * Math.signum(tx);
-
-                // checking for range cap
+//                robotHeading = pose.heading.toDouble();
                 turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
-                if (turretHeading + errorHeading > MAX_HEADING) {
-                    errorHeading = MAX_HEADING - turretHeading;
-                } else if (turretHeading + errorHeading < MIN_HEADING) {
-                    errorHeading = MIN_HEADING - turretHeading;
-                }
-
-                if (Math.abs(errorHeading) > Math.toRadians(40)) {
-                    limelight.stop();
-                }
-
-            } else {
-
-                robotHeading = pose.heading.toDouble();
-                turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
-                goalHeading = Math.atan2(AIM_Y - pose.position.y, AIM_X - pose.position.x);
+                goalHeading = Math.atan2(AIM_Y - yPos, AIM_X - xPos);
                 targetTurretHeading = wrapHeading(goalHeading - robotHeading);
 
                 if (targetTurretHeading > MAX_HEADING)
@@ -126,10 +129,10 @@ public class Turret {
 
                 errorHeading = targetTurretHeading - turretHeading;
 
-                if (Math.abs(errorHeading) <= Math.toRadians(40)) {
-                    limelight.start();
-                }
-            }
+//                if (Math.abs(errorHeading) <= Math.toRadians(40)) {
+//                    limelight.start();
+//                }
+//            }
 
 //            power = PID_P * errorHeading;
             double power = PID_P * Math.sqrt(Math.abs(errorHeading)) * Math.signum(errorHeading);
@@ -141,8 +144,19 @@ public class Turret {
 
             turretMotor.setPower(power);
 
+            if (Math.abs( errorHeading ) > 20.3) {
+                numOfCorrect = 0;
+            } else {
+                numOfCorrect++;
+            }
 
-            return followGoalTimer.seconds() < 28.5;
+            if (numOfCorrect >= 5) {
+                followGoalInitialized = false;
+                turretMotor.setPower(0);
+                return false;
+            }
+
+            return true;
         }
     }
 
@@ -150,7 +164,7 @@ public class Turret {
         return (heading + Math.PI) % (2*Math.PI) - Math.PI;
     }
 
-    public Action followGoal(double robotHeading) {
-        return new FollowGoal(robotHeading);
+    public Action followGoalRed(double xPos, double yPos, double robotHeading) {
+        return new FollowGoalRed(robotHeading, xPos, yPos);
     }
 }

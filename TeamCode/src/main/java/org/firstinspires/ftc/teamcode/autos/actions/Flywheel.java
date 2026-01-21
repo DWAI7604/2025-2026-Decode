@@ -33,7 +33,7 @@ public class Flywheel {
     private static double launchTimerDelayToEnd = 1900; // ms
 
     private static double INTAKE_POWER = 1.0;
-    public static double PASSTHROUGH_POWER_CLOSE = 0.7;
+    public static double PASSTHROUGH_POWER_CLOSE = 0.65;
     public static double PASSTHROUGH_POWER_FAR = 0.32;
 
     public Flywheel(HardwareMap hardwareMap) {

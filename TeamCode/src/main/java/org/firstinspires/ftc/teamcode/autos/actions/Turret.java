@@ -33,7 +33,7 @@ public class Turret {
 
     public static double POWER_CAP = 1;
 
-    public static double AIM_X = -72;
+    public static double AIM_X = -67;
     public static double AIM_Y = 72;
 
     public static double PID_P = 3;
@@ -91,50 +91,17 @@ public class Turret {
                 followGoalTimer.reset();
             }
 
-//            result = limelight.getLatestResult();
-//            double tx = 0;
-//            double errorHeading;
-//            if (limelightActive && result != null && result.isValid()) {
-//
-//                tx = result.getTx();
-//
-//                errorHeading = wrapHeading(-LL_P * tx);
-////                errorHeading = -LL_P * Math.sqrt(Math.abs(tx)) * Math.signum(tx);
-//
-//                // checking for range cap
-//                turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
-//                if (turretHeading + errorHeading > MAX_HEADING) {
-//                    errorHeading = MAX_HEADING - turretHeading;
-//                } else if (turretHeading + errorHeading < MIN_HEADING) {
-//                    errorHeading = MIN_HEADING - turretHeading;
-//                }
-//
-//                if (Math.abs(errorHeading) > Math.toRadians(40)) {
-//                    limelight.stop();
-//                }
-//
-//            } else {
+            turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
+            goalHeading = Math.atan2(AIM_Y - yPos, AIM_X - xPos);
+            targetTurretHeading = wrapHeading(goalHeading - robotHeading + Math.toRadians(180));
 
-//                robotHeading = pose.heading.toDouble();
-                turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
-                goalHeading = Math.atan2(AIM_Y - yPos, AIM_X - xPos);
-                targetTurretHeading = wrapHeading(goalHeading - robotHeading);
+            if (targetTurretHeading > MAX_HEADING)
+                targetTurretHeading = MAX_HEADING;
+            else if (targetTurretHeading < MIN_HEADING)
+                targetTurretHeading = MIN_HEADING;
 
-                if (targetTurretHeading > MAX_HEADING)
-                    targetTurretHeading = MAX_HEADING;
-                else if (targetTurretHeading < MIN_HEADING)
-                    targetTurretHeading = MIN_HEADING;
+            errorHeading = targetTurretHeading - turretHeading;
 
-//              targetTurretHeading = Math.toRadians(timer.seconds() / 10.0 * 360);
-
-                errorHeading = targetTurretHeading - turretHeading;
-
-//                if (Math.abs(errorHeading) <= Math.toRadians(40)) {
-//                    limelight.start();
-//                }
-//            }
-
-//            power = PID_P * errorHeading;
             double power = PID_P * Math.sqrt(Math.abs(errorHeading)) * Math.signum(errorHeading);
 
             if (power > POWER_CAP)
@@ -160,11 +127,53 @@ public class Turret {
         }
     }
 
+    public class Reset implements Action {
+        private boolean resetInitialized = false;
+        private int numOfCorrect;
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!resetInitialized) {
+                resetInitialized = true;
+            }
+
+            targetTurretHeading = 0;
+
+            errorHeading = targetTurretHeading - turretHeading;
+
+            double power = PID_P * Math.sqrt(Math.abs(errorHeading)) * Math.signum(errorHeading);
+
+            if (power > POWER_CAP)
+                power = POWER_CAP;
+            else if (power < -POWER_CAP)
+                power = -POWER_CAP;
+
+            turretMotor.setPower(power);
+
+            if (Math.abs( errorHeading ) > 20.3) {
+                numOfCorrect = 0;
+            } else {
+                numOfCorrect++;
+            }
+
+            if (numOfCorrect >= 5) {
+                turretMotor.setPower(0);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
     public double wrapHeading (double heading) {
         return (heading + Math.PI) % (2*Math.PI) - Math.PI;
     }
 
     public Action followGoalRed(double xPos, double yPos, double robotHeading) {
         return new FollowGoalRed(robotHeading, xPos, yPos);
+    }
+
+    public Action reset() {
+        return new Reset();
     }
 }

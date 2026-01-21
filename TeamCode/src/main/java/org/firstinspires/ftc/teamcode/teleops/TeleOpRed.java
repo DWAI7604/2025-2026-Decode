@@ -34,6 +34,8 @@ public class TeleOpRed extends LinearOpMode {
 
     public static double launchTimerDelayToIntake_FAR = 0; //ms
     public static double launchTimerDelayToPassthrough_FAR = 0; //ms
+    public static double launchTimerDelayToIntake_MED = 100; //ms
+    public static double launchTimerDelayToPassthrough_MED = 0; //ms
     public static double launchTimerDelayToIntake_CLOSE = 100; //ms
     public static double launchTimerDelayToPassthrough_CLOSE = 0; //ms
     private static double launchTimerDelayToIntake = launchTimerDelayToIntake_FAR; //ms
@@ -43,15 +45,16 @@ public class TeleOpRed extends LinearOpMode {
     private ElapsedTime passthroughTimer = new ElapsedTime();
 
     public static double INTAKE_POWER = 1.0;
-    public static double PASSTHROUGH_POWER_CLOSE = 0.7;
-    public static double PASSTHROUGH_POWER_FAR = 0.32;
+    public static double PASSTHROUGH_POWER_CLOSE = 0.6;
+    public static double PASSTHROUGH_POWER_MED = 0.7;
+    public static double PASSTHROUGH_POWER_FAR = 0.26;
     private static double passthroughPower = PASSTHROUGH_POWER_FAR;
 
-    public static double CLOSE_VEL = 1400;
-    public static double MED_VEL = 1560;
+    public static double CLOSE_VEL = 1900;
+    public static double MED_VEL = 1600;
     public static double FAR_VEL = 2140;
 
-    public static double CLOSE_ANG = 1;
+    public static double CLOSE_ANG = 0.4;
     public static double MED_ANG = 0.75;
     public static double FAR_ANG = 0.35;
     
@@ -117,8 +120,8 @@ public class TeleOpRed extends LinearOpMode {
 
     public static double POWER_CAP = 1;
 
-    public static double AIM_X = -72;
-    public static double AIM_Y = 66;
+    public static double AIM_X = -66;
+    public static double AIM_Y = 63;
 
     public static double LIMELIGHT_FAR_OFFSET = -2;
 
@@ -247,9 +250,9 @@ public class TeleOpRed extends LinearOpMode {
 
                 if (x2Prev) { // MEDIUM
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
-                    passthroughPower = PASSTHROUGH_POWER_CLOSE;
-                    launchTimerDelayToIntake = launchTimerDelayToIntake_CLOSE;
-                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_CLOSE;
+                    passthroughPower = PASSTHROUGH_POWER_MED;
+                    launchTimerDelayToIntake = launchTimerDelayToIntake_MED;
+                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_MED;
                     flywheelPower = 0.60;
                     flywheelTarVel = MED_VEL;
                     angleAdjust = MED_ANG;

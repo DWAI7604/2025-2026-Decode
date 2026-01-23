@@ -79,13 +79,13 @@ public class Flywheel {
 ////            packet.put("mode", "velocity");
 //            packet.put("4.OUTPUT", Math.abs( flywheel.getVelocity() - velocity ) > 15);
 
-            if (Math.abs( flywheel.getVelocity() - velocity ) > 25) {
+            if (Math.abs( flywheel.getVelocity() - velocity ) > 45) {
                 numOfCorrect = 0;
             } else {
                 numOfCorrect++;
             }
 
-            if (numOfCorrect >= 5) {
+            if (numOfCorrect >= 8) {
                 velocityInitialized = false;
                 return false;
             }

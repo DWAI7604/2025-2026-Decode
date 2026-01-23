@@ -113,8 +113,8 @@ public class TeleOpRed extends LinearOpMode {
     private static double TURRET_GEAR_RATIO = 24.0 / 136.0;
     public static double FUDGE = 6.2824155667973;
 
-    public static double MAX_HEADING = Math.toRadians(100.0);
-    public static double MIN_HEADING = Math.toRadians(-100.0);
+    public static double MAX_HEADING = Math.toRadians(110.0);
+    public static double MIN_HEADING = Math.toRadians(-110.0);
 
     public static double TURRET_ERROR_THRESHOLD = 0.3;
 

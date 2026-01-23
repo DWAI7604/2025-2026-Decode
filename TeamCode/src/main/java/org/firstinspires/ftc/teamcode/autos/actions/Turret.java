@@ -40,7 +40,7 @@ public class Turret {
     public static double AIM_Y = 63;
 
     public static double AIM_X_FAR = -63;
-    public static double AIM_Y_FAR = 66;
+    public static double AIM_Y_FAR = 69.5;
 
 //    public static double AIM_X_CLOSE = -68;
 //    public static double AIM_Y_CLOSE = 69.5;

@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
 import org.firstinspires.ftc.teamcode.autos.actions.Intake;
 import org.firstinspires.ftc.teamcode.autos.actions.Turret;
 
-@Autonomous(name="Indep - Far 12 - BLUE", group="Robot")
+@Autonomous(name="Indep - Far 9 - BLUE", group="Robot")
 public class FarTwelveBallBlue extends LinearOpMode {
 
     public final MecanumKinematics kinematics = new MecanumKinematics(
@@ -38,25 +38,26 @@ public class FarTwelveBallBlue extends LinearOpMode {
         Action moveThroughIntake1 = drive.actionBuilder(new Pose2d(59, -14, Math.toRadians(-45)))
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(72/2.0, -28), Math.toRadians(-90)), Math.toRadians(-90))
-                .lineToYConstantHeading(-58.5)
+                .lineToYConstantHeading(-60)
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-45)), 0)
                 .build();
 
-        Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(59, -14, Math.toRadians(-45)))
-                .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6, -40), Math.toRadians(-90)), Math.toRadians(-90))
-                .lineToYConstantHeading(-58.5)
-                .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-45)), 0)
-                .build();
+//        Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(59, 14, Math.toRadians(45)))
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6, 40), Math.toRadians(90)), Math.toRadians(90))
+//                .lineToYConstantHeading(60)
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
+//                .build();
 
         Action moveThroughIntakeHP = drive.actionBuilder(new Pose2d(59, -14, Math.toRadians(-45)))
-                .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(45, -14), Math.toRadians(-160)), Math.toRadians(-160))
-                .splineTo(new Vector2d(72.0/6, -40), Math.toRadians(-90))
-                .lineToYConstantHeading(-58.5)
-                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(47, 42), Math.toRadians(45)), Math.toRadians(0))
+                .splineToLinearHeading(new Pose2d(new Vector2d(54, -63), Math.toRadians(0)), Math.toRadians(0))
+//                .splineTo(new Vector2d(54, 63), Math.toRadians(0))
+//                .splineTo(new Vector2d(63, 63), Math.toRadians(0))
+                .lineToXConstantHeading(63)
+                .lineToXConstantHeading(55)
                 .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-45)), 0)
                 .build();
 
@@ -110,10 +111,10 @@ public class FarTwelveBallBlue extends LinearOpMode {
 
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(2050),
+                                flywheel.velocity(2120),
                                 flywheel.angle(0.35),
                                 flywheel.closeBlocker(),
-                                turret.followGoalRedFar(59, 14, Math.toRadians(45))
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-49))
                         ),
                         flywheel.launchFar(),
 
@@ -121,8 +122,8 @@ public class FarTwelveBallBlue extends LinearOpMode {
                                 moveThroughIntake1,
                                 intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(2050)
-//                                turret.followGoalRed(57, 17, Math.toRadians(45))
+                                flywheel.velocity(2120),
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-45))
                         ),
                         flywheel.launchFar(),
 
@@ -130,19 +131,19 @@ public class FarTwelveBallBlue extends LinearOpMode {
                                 moveThroughIntakeHP,
                                 intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(2050)
-//                                turret.followGoalRed(-40, 17, Math.toRadians(0))
+                                flywheel.velocity(2120),
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-42))
                         ),
                         flywheel.launchFar(),
 
-                        new ParallelAction(
-                                moveThroughIntake2,
-                                intake.passthrough(),
-                                intake.intakeIn(4600),
-                                flywheel.velocity(2050)
-//                                turret.followGoalRed(-40, 17, Math.toRadians(0))
-                        ),
-                        flywheel.launchFar(),
+//                        new ParallelAction(
+//                                moveThroughIntake2,
+//                                intake.passthrough(),
+//                                intake.intakeIn(4600),
+//                                flywheel.velocity(2070)
+////                                turret.followGoalRed(-40, 17, Math.toRadians(0))
+//                        ),
+//                        flywheel.launchFar(),
 
                         new ParallelAction(
                                 flywheel.stopAll(),

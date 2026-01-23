@@ -114,7 +114,7 @@ public class SSRCloseSixRed extends LinearOpMode {
                                 flywheel.velocity(1610)
                         ),
 
-                        new SleepAction(18),
+                        new SleepAction(16),
 
                         flywheel.launchClose(),
 

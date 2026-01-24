@@ -280,7 +280,12 @@ public class TeleOpRed extends LinearOpMode {
 
                 if (dpadUp2Prev) {
                     flywheelPower += 0.025;
-                    flywheelTarVel += 10;
+
+                    if (gamepad2.left_trigger > 0.5)
+                        flywheelTarVel += 40;
+                    else
+                        flywheelTarVel += 10;
+
                     updateFlywheel = true;
                 }
             } else if (gamepad2.dpad_down != dpadDown2Prev) {
@@ -288,7 +293,12 @@ public class TeleOpRed extends LinearOpMode {
 
                 if (dpadDown2Prev) {
                     flywheelPower -= 0.025;
-                    flywheelTarVel -= 10;
+
+                    if (gamepad2.left_trigger > 0.5)
+                        flywheelTarVel -= 40;
+                    else
+                        flywheelTarVel -= 10;
+
                     updateFlywheel = true;
                 }
             }
@@ -466,14 +476,20 @@ public class TeleOpRed extends LinearOpMode {
                 dpadLeft2Prev = gamepad2.dpad_left;
 
                 if (dpadLeft2Prev) {
-                    angleAdjust += 0.05;
+                    if (gamepad2.left_trigger > 0.5)
+                        angleAdjust += 0.20;
+                    else
+                        angleAdjust += 0.05;
                     updateAngleOfFlywheel = true;
                 }
             } else if (gamepad2.dpad_right != dpadRight2Prev) {
                 dpadRight2Prev = gamepad2.dpad_right;
 
                 if (dpadRight2Prev) {
-                    angleAdjust -= 0.05;
+                    if (gamepad2.left_trigger > 0.5)
+                        angleAdjust -= 0.20;
+                    else
+                        angleAdjust -= 0.05;
                     updateAngleOfFlywheel = true;
                 }
             }

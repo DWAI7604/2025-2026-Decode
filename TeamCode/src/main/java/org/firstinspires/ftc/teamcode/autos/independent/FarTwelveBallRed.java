@@ -111,10 +111,10 @@ public class FarTwelveBallRed extends LinearOpMode {
 
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(2120),
-                                flywheel.angle(0.35),
+                                flywheel.velocity(1395),
+                                flywheel.angle(0.00),
                                 flywheel.closeBlocker(),
-                                turret.followGoalBlueFar(59, 14, Math.toRadians(49))
+                                turret.followGoalRedFar(59, 14, Math.toRadians(49))
                         ),
                         flywheel.launchFar(),
 
@@ -122,8 +122,8 @@ public class FarTwelveBallRed extends LinearOpMode {
                                 moveThroughIntake1,
                                 intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(2120),
-                                turret.followGoalBlueFar(59, 14, Math.toRadians(45))
+                                flywheel.velocity(1395),
+                                turret.followGoalRedFar(59, 14, Math.toRadians(45))
                         ),
                         flywheel.launchFar(),
 
@@ -131,19 +131,10 @@ public class FarTwelveBallRed extends LinearOpMode {
                                 moveThroughIntakeHP,
                                 intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(2120),
-                                turret.followGoalBlueFar(59, 14, Math.toRadians(42))
+                                flywheel.velocity(1395),
+                                turret.followGoalRedFar(59, 14, Math.toRadians(42))
                         ),
                         flywheel.launchFar(),
-
-//                        new ParallelAction(
-//                                moveThroughIntake2,
-//                                intake.passthrough(),
-//                                intake.intakeIn(4600),
-//                                flywheel.velocity(2070)
-////                                turret.followGoalRed(-40, 17, Math.toRadians(0))
-//                        ),
-//                        flywheel.launchFar(),
 
                         new ParallelAction(
                                 flywheel.stopAll(),

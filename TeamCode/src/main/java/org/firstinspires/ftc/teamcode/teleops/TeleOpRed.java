@@ -45,18 +45,19 @@ public class TeleOpRed extends LinearOpMode {
     private ElapsedTime passthroughTimer = new ElapsedTime();
 
     public static double INTAKE_POWER = 1.0;
-    public static double PASSTHROUGH_POWER_CLOSE = 0.6;
-    public static double PASSTHROUGH_POWER_MED = 0.7;
-    public static double PASSTHROUGH_POWER_FAR = 0.26;
+    public static double INTAKE_POWER_FAR = 0.35;
+    public static double PASSTHROUGH_POWER_CLOSE = 0.75;
+    public static double PASSTHROUGH_POWER_MED = 0.75;
+    public static double PASSTHROUGH_POWER_FAR = 0.725;
     private static double passthroughPower = PASSTHROUGH_POWER_FAR;
 
-    public static double CLOSE_VEL = 1900;
-    public static double MED_VEL = 1600;
-    public static double FAR_VEL = 2140;
+    public static double CLOSE_VEL = 1000;
+    public static double MED_VEL = 1200;
+    public static double FAR_VEL = 1395;
 
-    public static double CLOSE_ANG = 0.4;
-    public static double MED_ANG = 0.75;
-    public static double FAR_ANG = 0.35;
+    public static double CLOSE_ANG = 1;
+    public static double MED_ANG = 0.3;
+    public static double FAR_ANG = 0;
     
     public static double YAW_STRENGTH = 0.85;
     public static double AUTOAIM_STICK_STRENGTH_FAR = 0.14;
@@ -81,6 +82,16 @@ public class TeleOpRed extends LinearOpMode {
     private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
     private ElapsedTime launchTimer = new ElapsedTime();
+
+    public static int flywheel_step = 0;
+
+    public static double flywheel_step_diff = 100.0; // ms
+    public static int flywheel_step_max = 16;
+
+    private double velocity = 0;
+
+    private ElapsedTime flywheelLowerTimer = new ElapsedTime();
+    private boolean flywheelLowering = false;
 
     private boolean blockerClosedPrimary = true;
     private boolean blockerClosedSecondary = true;
@@ -113,8 +124,8 @@ public class TeleOpRed extends LinearOpMode {
     private static double TURRET_GEAR_RATIO = 24.0 / 136.0;
     public static double FUDGE = 6.2824155667973;
 
-    public static double MAX_HEADING = Math.toRadians(110.0);
-    public static double MIN_HEADING = Math.toRadians(-110.0);
+    public static double MAX_HEADING = Math.toRadians(120.0);
+    public static double MIN_HEADING = Math.toRadians(-120.0);
 
     public static double TURRET_ERROR_THRESHOLD = 0.3;
 
@@ -171,7 +182,7 @@ public class TeleOpRed extends LinearOpMode {
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
 //        flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(600, 0.5, 30, 10));
+        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(700, 0.1, 0, 15));
 
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
         passthrough.setDirection(DcMotor.Direction.REVERSE);
@@ -198,8 +209,8 @@ public class TeleOpRed extends LinearOpMode {
         turretMotor.setDirection(DcMotor.Direction.REVERSE);
 //        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(700, 3, 200, 0));
-//        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
-//        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
+        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
+        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
 
         waitForStart();
 
@@ -235,6 +246,11 @@ public class TeleOpRed extends LinearOpMode {
                 a2Prev = gamepad2.a;
 
                 if (a2Prev) { // CLOSE
+                    if (flywheelTarVel > CLOSE_VEL) {
+                        flywheelLowering = true;
+                        flywheelLowerTimer.reset();
+                        flywheel_step = 1;
+                    }
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
                     passthroughPower = PASSTHROUGH_POWER_CLOSE;
                     launchTimerDelayToIntake = launchTimerDelayToIntake_CLOSE;
@@ -249,6 +265,11 @@ public class TeleOpRed extends LinearOpMode {
                 x2Prev = gamepad2.x;
 
                 if (x2Prev) { // MEDIUM
+                    if (flywheelTarVel > CLOSE_VEL) {
+                        flywheelLowering = true;
+                        flywheelLowerTimer.reset();
+                        flywheel_step = 1;
+                    }
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
                     passthroughPower = PASSTHROUGH_POWER_MED;
                     launchTimerDelayToIntake = launchTimerDelayToIntake_MED;
@@ -263,6 +284,11 @@ public class TeleOpRed extends LinearOpMode {
                 y2Prev = gamepad2.y;
 
                 if (y2Prev) { // FAR
+                    if (flywheelTarVel > CLOSE_VEL) {
+                        flywheelLowering = true;
+                        flywheelLowerTimer.reset();
+                        flywheel_step = 1;
+                    }
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_FAR;
                     passthroughPower = PASSTHROUGH_POWER_FAR;
                     launchTimerDelayToIntake = launchTimerDelayToIntake_FAR;
@@ -303,12 +329,35 @@ public class TeleOpRed extends LinearOpMode {
                 }
             }
 
-            if (updateFlywheel) {
+            if (updateFlywheel || flywheelLowering) {
 //                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
 //                flywheel.setPower(flywheelPower);
 
-                flywheel.setVelocity(flywheelTarVel);
+                if (flywheelLowering) {
+
+                    if (flywheel_step == 1)
+                        velocity = flywheel.getVelocity();
+
+                    if (flywheel_step > flywheel_step_max) {
+
+                        flywheelLowering = false;
+                        flywheel_step++;
+                        flywheel.setVelocity(flywheelTarVel);
+
+                    } else if (flywheelLowerTimer.milliseconds() > flywheel_step_diff) {
+
+                        velocity = (flywheelTarVel + velocity * (flywheel_step_max - flywheel_step)) / (flywheel_step_max + 1 - flywheel_step);
+
+                        flywheel.setVelocity(velocity);
+                        flywheel_step++;
+                        flywheelLowerTimer.reset();
+
+                    }
+
+                } else
+                    flywheel.setVelocity(flywheelTarVel);
             }
+            panelsTelemetry.getTelemetry().addData("hypothetical velocity", velocity);
 
             double vagueError = wrapHeading(Math.atan2(AIM_Y - pose.position.y, AIM_X - pose.position.x)- pose.heading.toDouble()+ Math.toRadians(180)) - turretHeading;
 
@@ -355,7 +404,10 @@ public class TeleOpRed extends LinearOpMode {
                 }
 
                 if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
-                    intake.setPower(INTAKE_POWER);
+                    if (flywheelTarVel == FAR_VEL)
+                        intake.setPower(INTAKE_POWER_FAR);
+                    else
+                        intake.setPower(INTAKE_POWER);
                 }
 
             }
@@ -477,7 +529,7 @@ public class TeleOpRed extends LinearOpMode {
 
                 if (dpadLeft2Prev) {
                     if (gamepad2.left_trigger > 0.5)
-                        angleAdjust += 0.20;
+                        angleAdjust += 0.10;
                     else
                         angleAdjust += 0.05;
                     updateAngleOfFlywheel = true;
@@ -487,7 +539,7 @@ public class TeleOpRed extends LinearOpMode {
 
                 if (dpadRight2Prev) {
                     if (gamepad2.left_trigger > 0.5)
-                        angleAdjust -= 0.20;
+                        angleAdjust -= 0.10;
                     else
                         angleAdjust -= 0.05;
                     updateAngleOfFlywheel = true;

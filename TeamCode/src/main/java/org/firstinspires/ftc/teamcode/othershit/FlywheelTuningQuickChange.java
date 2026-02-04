@@ -29,6 +29,14 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
     public static double tune2_dVal = 0;
     public static double tune3_fVal = 0;
 
+    public static int flywheel_step = 0;
+
+    public static double flywheel_step_diff = 2000 / 9.0; // ms
+    public static double flywheel_step_max = 9;
+
+    private ElapsedTime flywheelLowerTimer = new ElapsedTime();
+    private boolean flywheelLowering = false;
+
     private DcMotorEx flywheel;
 
     private ElapsedTime timeChange = new ElapsedTime();
@@ -42,15 +50,15 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
     private ElapsedTime passthroughTimer = new ElapsedTime();
 
     private static double INTAKE_POWER = 1.0;
-    private static double PASSTHROUGH_POWER = 0.5;
+    private static double PASSTHROUGH_POWER = 0.75;
 
-    private static double CLOSE_VEL = 1400;
-    private static double MED_VEL = 1560;
-    private static double FAR_VEL = 2140;
+    private static double CLOSE_VEL = 1000;
+    private static double MED_VEL = 1200;
+    private static double FAR_VEL = 1400;
 
-    private static double CLOSE_ANG = 1;
+    private static double CLOSE_ANG = 1.00;
     private static double MED_ANG = 0.75;
-    private static double FAR_ANG = 0.35;
+    private static double FAR_ANG = 0.00;
 
     private DcMotor intake;
     private DcMotor passthrough;
@@ -111,8 +119,6 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
 
             if (timeChange.milliseconds() > timePause) {
 
-                velocity = ((1.0 - weight) * velocity) + weight * flywheel.getVelocity();
-
                 timeChange.reset();
 
                 flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(tune0_pVal, tune1_iVal, tune2_dVal, tune3_fVal));
@@ -141,6 +147,11 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
                 a2Prev = gamepad2.a;
 
                 if (a2Prev) { // CLOSE
+                    if (flywheelTarVel > CLOSE_VEL) {
+                        flywheelLowering = true;
+                        flywheelLowerTimer.reset();
+                        flywheel_step = 1;
+                    }
                     flywheelPower = 0.525;
                     flywheelTarVel = CLOSE_VEL;
                     angleAdjust = CLOSE_ANG;
@@ -151,6 +162,11 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
                 x2Prev = gamepad2.x;
 
                 if (x2Prev) { // MEDIUM
+                    if (flywheelTarVel > MED_VEL) {
+                        flywheelLowering = true;
+                        flywheelLowerTimer.reset();
+                        flywheel_step = 1;
+                    }
                     flywheelPower = 0.60;
                     flywheelTarVel = MED_VEL;
                     angleAdjust = MED_ANG;
@@ -161,6 +177,11 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
                 y2Prev = gamepad2.y;
 
                 if (y2Prev) { // FAR
+                    if (flywheelTarVel > FAR_VEL) {
+                        flywheelLowering = true;
+                        flywheelLowerTimer.reset();
+                        flywheel_step = 1;
+                    }
                     flywheelPower = 0.725;
                     flywheelTarVel = FAR_VEL;
                     angleAdjust = FAR_ANG;
@@ -187,11 +208,48 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
                 }
             }
 
-            if (updateFlywheel) {
+            if (updateFlywheel || flywheelLowering) {
 //                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
 //                flywheel.setPower(flywheelPower);
 
-                flywheel.setVelocity(flywheelTarVel);
+                if (flywheelLowering) {
+
+                    if (flywheel_step == 1)
+                        velocity = flywheel.getVelocity();
+
+                    if (flywheel_step > flywheel_step_max) {
+
+                        flywheelLowering = false;
+                        flywheel_step++;
+                        flywheel.setVelocity(flywheelTarVel);
+
+                    } else if (flywheelLowerTimer.milliseconds() > flywheel_step_diff) {
+
+                        velocity = (flywheelTarVel + velocity * (flywheel_step_max - flywheel_step)) / (flywheel_step_max + 1 - flywheel_step);
+
+                        flywheel.setVelocity(velocity);
+                        flywheel_step++;
+                        flywheelLowerTimer.reset();
+
+                    }
+
+//                    if (flywheelLowering && flywheelLowerTimer.milliseconds() < flywheel_step_1 && flywheel_step == 1) {
+//                        velocity = (flywheelTarVel + flywheel.getVelocity() + flywheel.getVelocity() + flywheel.getVelocity()) / 4.0;
+//                        flywheel.setVelocity(velocity);
+//                        flywheel_step++;
+//                    } else if (flywheelLowering && flywheelLowerTimer.milliseconds() > flywheel_step_1 && flywheel_step == 2) {
+//                        velocity = (flywheelTarVel + velocity + velocity) / 3.0;
+//                        flywheel.setVelocity(velocity);
+//                        flywheel_step++;
+//                    } else if (flywheelLowering && flywheelLowerTimer.milliseconds() > flywheel_step_2 && flywheel_step == 3) {
+//                        velocity = (flywheelTarVel + velocity) / 2.0;
+//                        flywheel.setVelocity(velocity);
+//                        flywheel_step++;
+//                    } else if (flywheelLowering && flywheelLowerTimer.milliseconds() > flywheel_step_3) {
+//                    }
+
+                } else
+                    flywheel.setVelocity(flywheelTarVel);
             }
 
             // ===== ADJUST ANGLE OF FLYWHEEL =====
@@ -220,8 +278,6 @@ public class FlywheelTuningQuickChange extends LinearOpMode {
 
                 angleAdjustServo.setPosition(angleAdjust);
             }
-
-            flywheel.setVelocity(flywheelTarVel);
 
             // ===== LAUNCHING MECHANISM FROM TELEOP =====
             /*\

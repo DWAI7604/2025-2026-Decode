@@ -9,14 +9,14 @@ import com.bylazar.telemetry.PanelsTelemetry;
 //@Disabled
 
 @Configurable
-@TeleOp(name="angleAdjust = 0.0")
+@TeleOp(name="angleAdjust = 1.0")
 public class ResetAngleAdjust extends LinearOpMode {
     private Servo servo;
 
 
     public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
 
-    public static double position = 0.0;
+    public static double position = 1.0;
 
     @Override
     public void runOpMode () {

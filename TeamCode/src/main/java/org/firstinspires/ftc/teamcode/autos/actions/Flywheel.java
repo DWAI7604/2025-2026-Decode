@@ -34,13 +34,13 @@ public class Flywheel {
 
     private static double INTAKE_POWER = 1.0;
     public static double PASSTHROUGH_POWER_CLOSE = 0.65;
-    public static double PASSTHROUGH_POWER_FAR = 0.32;
+    public static double PASSTHROUGH_POWER_FAR = 0.70;
 
     public Flywheel(HardwareMap hardwareMap) {
         flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
 //        flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(600, 0.5, 30, 10));
+        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(700, 0.1, 0, 15));
 
         passthrough = hardwareMap.get(DcMotor.class, "passthrough");
         passthrough.setDirection(DcMotor.Direction.REVERSE);

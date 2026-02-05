@@ -100,8 +100,8 @@ public class SSRCloseSixRed extends LinearOpMode {
 
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(1610),
-                                flywheel.angle(0.75),
+                                flywheel.velocity(1000),
+                                flywheel.angle(0.6),
                                 flywheel.closeBlocker(),
                                 turret.followGoalRed(-40, 17, Math.toRadians(0))
                         ),
@@ -111,7 +111,7 @@ public class SSRCloseSixRed extends LinearOpMode {
                                 moveThroughIntake1,
                                 intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(1610)
+                                flywheel.velocity(1000)
                         ),
 
                         new SleepAction(16),

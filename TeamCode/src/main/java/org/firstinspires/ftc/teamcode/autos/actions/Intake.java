@@ -17,7 +17,7 @@ public class Intake {
     private TouchSensor limitSwitch;
 
     private static double INTAKE_POWER = 1.0;
-    private static double PASSTHROUGH_POWER = 0.6;
+    private static double PASSTHROUGH_POWER = 0.70;
 
     public static double limSwitchDelayToPassthrough = 250; // ms
 

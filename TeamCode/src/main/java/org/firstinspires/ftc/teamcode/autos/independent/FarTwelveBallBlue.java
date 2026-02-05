@@ -111,8 +111,8 @@ public class FarTwelveBallBlue extends LinearOpMode {
 
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(2120),
-                                flywheel.angle(0.35),
+                                flywheel.velocity(1400),
+                                flywheel.angle(0.00),
                                 flywheel.closeBlocker(),
                                 turret.followGoalBlueFar(59, -14, Math.toRadians(-49))
                         ),
@@ -122,7 +122,7 @@ public class FarTwelveBallBlue extends LinearOpMode {
                                 moveThroughIntake1,
                                 intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(2120),
+                                flywheel.velocity(1400),
                                 turret.followGoalBlueFar(59, -14, Math.toRadians(-45))
                         ),
                         flywheel.launchFar(),
@@ -131,7 +131,7 @@ public class FarTwelveBallBlue extends LinearOpMode {
                                 moveThroughIntakeHP,
                                 intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(2120),
+                                flywheel.velocity(1400),
                                 turret.followGoalBlueFar(59, -14, Math.toRadians(-42))
                         ),
                         flywheel.launchFar(),

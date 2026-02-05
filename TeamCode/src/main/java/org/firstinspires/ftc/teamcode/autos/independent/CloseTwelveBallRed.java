@@ -102,7 +102,7 @@ public class CloseTwelveBallRed extends LinearOpMode {
                         new ParallelAction(
                                 moveToLaunch,
                                 flywheel.velocity(1000),
-                                flywheel.angle(1),
+                                flywheel.angle(0.6),
                                 flywheel.closeBlocker(),
                                 turret.followGoalRed(-40, 17, Math.toRadians(0))
                         ),

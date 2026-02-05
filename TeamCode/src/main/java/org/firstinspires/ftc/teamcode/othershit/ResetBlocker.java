@@ -7,13 +7,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 //@Disabled
-@Configurable
+//@Configurable
 @TeleOp(name="blocker = 0.5")
 public class ResetBlocker extends LinearOpMode {
     private Servo servo;
 
 
-    public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
+//    public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
 
     public static double position = 0.5;
 

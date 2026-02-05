@@ -55,7 +55,7 @@ public class TeleOpBlue extends LinearOpMode {
     public static double MED_VEL = 1200;
     public static double FAR_VEL = 1395;
 
-    public static double CLOSE_ANG = 1;
+    public static double CLOSE_ANG = 0.7;
     public static double MED_ANG = 0.3;
     public static double FAR_ANG = 0;
 
@@ -124,8 +124,8 @@ public class TeleOpBlue extends LinearOpMode {
     private static double TURRET_GEAR_RATIO = 24.0 / 136.0;
     public static double FUDGE = 6.2824155667973;
 
-    public static double MAX_HEADING = Math.toRadians(120.0);
-    public static double MIN_HEADING = Math.toRadians(-120.0);
+    public static double MAX_HEADING = Math.toRadians(130.0);
+    public static double MIN_HEADING = Math.toRadians(-130.0);
 
     public static double TURRET_ERROR_THRESHOLD = 0.3;
 
@@ -363,7 +363,12 @@ public class TeleOpBlue extends LinearOpMode {
 
             telemetry.addData("vague error", vagueError);
 
-            if (Math.abs(flywheel.getVelocity() - flywheelTarVel) > 20 && Math.abs(vagueError) > TURRET_ERROR_THRESHOLD) {
+//            if (!(Math.abs(flywheel.getVelocity() - flywheelTarVel) < 20 && Math.abs(vagueError) < TURRET_ERROR_THRESHOLD)) {
+//                gamepad2.rumble(0.5, 0.5, 50);
+//                telemetry.addData("rumble2: ", "is rumbling");
+//            }
+
+            if (Math.abs(vagueError) > TURRET_ERROR_THRESHOLD) {
                 gamepad2.rumble(0.5, 0.5, 50);
                 telemetry.addData("rumble2: ", "is rumbling");
             }
@@ -647,8 +652,8 @@ public class TeleOpBlue extends LinearOpMode {
 //
 //            }
 
-            if (Math.abs(vagueError) <= TURRET_ERROR_THRESHOLD) {
-                gamepad1.rumble(0.3, 0.3, 50);
+            if (intake.getPower() > 0.1) {
+                gamepad1.rumble(0.5, 0.5, 50);
                 telemetry.addData("rumble1: ", "is rumbling");
             }
 

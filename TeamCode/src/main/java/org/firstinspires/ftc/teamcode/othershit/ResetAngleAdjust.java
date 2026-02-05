@@ -8,13 +8,13 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.bylazar.telemetry.PanelsTelemetry;
 //@Disabled
 
-@Configurable
+//@Configurable
 @TeleOp(name="angleAdjust = 1.0")
 public class ResetAngleAdjust extends LinearOpMode {
     private Servo servo;
 
 
-    public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
+//    public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
 
     public static double position = 1.0;
 

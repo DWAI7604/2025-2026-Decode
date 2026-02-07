@@ -19,7 +19,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 
 @TeleOp(name="*TeleOp - BLUE")
-@Configurable
+//@Configurable
 public class TeleOpBlue extends LinearOpMode {
 
     public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
@@ -44,18 +44,19 @@ public class TeleOpBlue extends LinearOpMode {
     public static double limSwitchDelayToPassthrough = 250; // ms
     private ElapsedTime passthroughTimer = new ElapsedTime();
 
-    public static double INTAKE_POWER = 1.0;
+    public static double INTAKE_POWER_CLOSE = 1.0;
     public static double INTAKE_POWER_FAR = 0.35;
+    private double intakePower = INTAKE_POWER_FAR;
     public static double PASSTHROUGH_POWER_CLOSE = 0.75;
     public static double PASSTHROUGH_POWER_MED = 0.75;
     public static double PASSTHROUGH_POWER_FAR = 0.725;
     private static double passthroughPower = PASSTHROUGH_POWER_FAR;
 
-    public static double CLOSE_VEL = 1000;
+    public static double CLOSE_VEL = 1040;
     public static double MED_VEL = 1200;
     public static double FAR_VEL = 1395;
 
-    public static double CLOSE_ANG = 0.7;
+    public static double CLOSE_ANG = 0.5;
     public static double MED_ANG = 0.3;
     public static double FAR_ANG = 0;
 
@@ -209,8 +210,8 @@ public class TeleOpBlue extends LinearOpMode {
         turretMotor.setDirection(DcMotor.Direction.REVERSE);
 //        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(700, 3, 200, 0));
-        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
-        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
+//        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
+//        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
 
         waitForStart();
 
@@ -253,6 +254,7 @@ public class TeleOpBlue extends LinearOpMode {
                     }
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
                     passthroughPower = PASSTHROUGH_POWER_CLOSE;
+                    intakePower = INTAKE_POWER_CLOSE;
                     launchTimerDelayToIntake = launchTimerDelayToIntake_CLOSE;
                     launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_CLOSE;
                     flywheelPower = 0.525;
@@ -272,6 +274,7 @@ public class TeleOpBlue extends LinearOpMode {
                     }
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
                     passthroughPower = PASSTHROUGH_POWER_MED;
+                    intakePower = INTAKE_POWER_CLOSE;
                     launchTimerDelayToIntake = launchTimerDelayToIntake_MED;
                     launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_MED;
                     flywheelPower = 0.60;
@@ -291,6 +294,7 @@ public class TeleOpBlue extends LinearOpMode {
                     }
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_FAR;
                     passthroughPower = PASSTHROUGH_POWER_FAR;
+                    intakePower = INTAKE_POWER_FAR;
                     launchTimerDelayToIntake = launchTimerDelayToIntake_FAR;
                     launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_FAR;
                     flywheelPower = 0.725;
@@ -368,7 +372,7 @@ public class TeleOpBlue extends LinearOpMode {
 //                telemetry.addData("rumble2: ", "is rumbling");
 //            }
 
-            if (Math.abs(vagueError) > TURRET_ERROR_THRESHOLD) {
+            if (Math.abs(vagueError) > TURRET_ERROR_THRESHOLD || Math.abs(flywheel.getVelocity() - flywheelTarVel) > 30) {
                 gamepad2.rumble(0.5, 0.5, 50);
                 telemetry.addData("rumble2: ", "is rumbling");
             }
@@ -409,10 +413,7 @@ public class TeleOpBlue extends LinearOpMode {
                 }
 
                 if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
-                    if (flywheelTarVel == FAR_VEL)
-                        intake.setPower(INTAKE_POWER_FAR);
-                    else
-                        intake.setPower(INTAKE_POWER);
+                    intake.setPower(intakePower);
                 }
 
             }
@@ -460,7 +461,7 @@ public class TeleOpBlue extends LinearOpMode {
                         intake.setPower(0);
                         intakeState = IntakeState.off;
                     } else {
-                        intake.setPower(INTAKE_POWER);
+                        intake.setPower(INTAKE_POWER_CLOSE);
                         intakeState = IntakeState.on;
 
                         if (!ballReady) {
@@ -480,7 +481,7 @@ public class TeleOpBlue extends LinearOpMode {
                         intake.setPower(0);
                         intakeState = IntakeState.off;
                     } else {
-                        intake.setPower(INTAKE_POWER);
+                        intake.setPower(INTAKE_POWER_CLOSE);
                         intakeState = IntakeState.on;
 
                         if (!ballReady) {
@@ -499,7 +500,7 @@ public class TeleOpBlue extends LinearOpMode {
                         passthrough.setPower(passthroughPower);
                         intakeState = IntakeState.off;
                     } else {
-                        intake.setPower(-INTAKE_POWER);
+                        intake.setPower(-INTAKE_POWER_CLOSE);
                         intakeState = IntakeState.reject;
                         passthrough.setPower(-passthroughPower);
                         ballReady = false;

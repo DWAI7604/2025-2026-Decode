@@ -11,7 +11,7 @@ import com.bylazar.telemetry.PanelsTelemetry;
 //@Disabled
 
 //@Configurable
-@TeleOp(name="turret pos = 0.0")
+@TeleOp(name="*turret pos = 0.0")
 public class ResetTurret extends LinearOpMode {
     private DcMotorEx turretMotor;
 

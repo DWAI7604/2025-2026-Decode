@@ -105,14 +105,14 @@ public class DoubleFlywheel extends LinearOpMode {
 //        flywheel2.setDirection(DcMotor.Direction.REVERSE);
         flywheel2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-//        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
-//        passthrough.setDirection(DcMotor.Direction.REVERSE);
-//        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
+        passthrough.setDirection(DcMotor.Direction.REVERSE);
+        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-//        intake = hardwareMap.get(DcMotor.class, "intake");
-//        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//
-//        blocker = hardwareMap.get(Servo.class, "blocker");
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        blocker = hardwareMap.get(Servo.class, "blocker");
 //
         angleAdjustServo = hardwareMap.get(Servo.class, "angleAdjust");
 
@@ -324,41 +324,41 @@ public class DoubleFlywheel extends LinearOpMode {
 //                angleAdjustServo.setPosition(angleAdjust);
 //            }
 //
-//            // ===== LAUNCHING MECHANISM FROM TELEOP =====
-//            /*\
-//             * when button pressed and held:
-//             * 1.) opens the blocker
-//             * 2.) runs passthrough
-//             * 3.) runs intake
-//             * when button released: stop passthrough + intake, close blocker
-//            \*/
-//            if (gamepad2.right_bumper != bumperR2Prev) {
-//                bumperR2Prev = gamepad2.right_bumper;
-//
-//                if (bumperR2Prev) {
-//                    launchTimer.reset();
-//                    launching = true;
-//                } else {
-//                    intake.setPower(0);
-//                    passthrough.setPower(0);
-//                    blocker.setPosition(blockerPosClosed);
-//                    launching = false;
-//                }
-//            }
-//
-//            if (launching) {
-//
-//                blocker.setPosition(blockerPosOpened);
-//
-//                if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
-//                    passthrough.setPower(PASSTHROUGH_POWER);
-//                }
-//
-//                if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
-//                    intake.setPower(INTAKE_POWER);
-//                }
+            // ===== LAUNCHING MECHANISM FROM TELEOP =====
+            /*\
+             * when button pressed and held:
+             * 1.) opens the blocker
+             * 2.) runs passthrough
+             * 3.) runs intake
+             * when button released: stop passthrough + intake, close blocker
+            \*/
+            if (gamepad2.right_bumper != bumperR2Prev) {
+                bumperR2Prev = gamepad2.right_bumper;
 
-//            }
+                if (bumperR2Prev) {
+                    launchTimer.reset();
+                    launching = true;
+                } else {
+                    intake.setPower(0);
+                    passthrough.setPower(0);
+                    blocker.setPosition(blockerPosClosed);
+                    launching = false;
+                }
+            }
+
+            if (launching) {
+
+                blocker.setPosition(blockerPosOpened);
+
+                if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
+                    passthrough.setPower(PASSTHROUGH_POWER);
+                }
+
+                if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
+                    intake.setPower(INTAKE_POWER);
+                }
+
+            }
 //
             panelsTelemetry.getTelemetry().addData("target velocity", flywheelTarVel);
 //            panelsTelemetry.getTelemetry().addData("hypothetical velocity", velocity);

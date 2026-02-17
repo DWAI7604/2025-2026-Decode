@@ -26,12 +26,12 @@ public class DoubleFlywheel extends LinearOpMode {
     public static double timePause = 50; // milliseconds
     public static double weight = 0.1;
 
-    public static double tune0_pVal = 170;
-    public static double tune1_iVal = 0.15;
+    public static double tune0_pVal = 0; // 170
+    public static double tune1_iVal = 0; // 0.15
     public static double tune2_dVal = 0;
     public static double tune3_fVal = 0;
 
-    public static double tune0_pVal_diff = 5;
+    public static double tune0_pVal_diff = 0;
     public static double tune1_iVal_diff = 0;
     public static double tune2_dVal_diff = 0;
     public static double tune3_fVal_diff = 0;
@@ -53,7 +53,7 @@ public class DoubleFlywheel extends LinearOpMode {
     private static double blockerPosClosed = .11;
     private static double blockerPosOpened = .52;
 
-    private static double launchTimerDelayToIntake = 400; //ms
+    private static double launchTimerDelayToIntake = 10; //ms
     private static double launchTimerDelayToPassthrough = 10; //ms
 
     private ElapsedTime passthroughTimer = new ElapsedTime();
@@ -105,9 +105,9 @@ public class DoubleFlywheel extends LinearOpMode {
 //        flywheel2.setDirection(DcMotor.Direction.REVERSE);
         flywheel2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
-        passthrough.setDirection(DcMotor.Direction.REVERSE);
-        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
+//        passthrough.setDirection(DcMotor.Direction.REVERSE);
+//        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         intake = hardwareMap.get(DcMotor.class, "intake");
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -340,7 +340,7 @@ public class DoubleFlywheel extends LinearOpMode {
                     launching = true;
                 } else {
                     intake.setPower(0);
-                    passthrough.setPower(0);
+//                    passthrough.setPower(0);
                     blocker.setPosition(blockerPosClosed);
                     launching = false;
                 }
@@ -350,9 +350,9 @@ public class DoubleFlywheel extends LinearOpMode {
 
                 blocker.setPosition(blockerPosOpened);
 
-                if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
-                    passthrough.setPower(PASSTHROUGH_POWER);
-                }
+//                if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
+//                    passthrough.setPower(PASSTHROUGH_POWER);
+//                }
 
                 if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
                     intake.setPower(INTAKE_POWER);

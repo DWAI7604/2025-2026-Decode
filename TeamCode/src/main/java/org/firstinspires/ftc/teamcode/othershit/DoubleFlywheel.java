@@ -26,8 +26,8 @@ public class DoubleFlywheel extends LinearOpMode {
     public static double timePause = 50; // milliseconds
     public static double weight = 0.1;
 
-    public static double tune0_pVal = 0; // 170
-    public static double tune1_iVal = 0; // 0.15
+    public static double tune0_pVal = 380; // 170
+    public static double tune1_iVal = 0.2; // 0.15
     public static double tune2_dVal = 0;
     public static double tune3_fVal = 0;
 
@@ -38,8 +38,8 @@ public class DoubleFlywheel extends LinearOpMode {
 
     public static int flywheel_step = 0;
 
-    public static double flywheel_step_diff = 100; // inc vel
-    public static double flywheel_step_pause = 500; // ms
+    public static double flywheel_step_diff = 50; // inc vel
+    public static double flywheel_step_pause = 100; // ms
 
     private ElapsedTime flywheelLowerTimer = new ElapsedTime();
     private boolean flywheelLowering = false;
@@ -50,15 +50,15 @@ public class DoubleFlywheel extends LinearOpMode {
 
     private ElapsedTime timeChange = new ElapsedTime();
 
-    private static double blockerPosClosed = .11;
-    private static double blockerPosOpened = .52;
+    private static double blockerPosClosed = .34;
+    private static double blockerPosOpened = .14;
 
     private static double launchTimerDelayToIntake = 10; //ms
     private static double launchTimerDelayToPassthrough = 10; //ms
 
     private ElapsedTime passthroughTimer = new ElapsedTime();
 
-    private static double INTAKE_POWER = 1.0;
+    private static double INTAKE_POWER = 0.9;
     private static double PASSTHROUGH_POWER = 0.75;
 
 //    private static double CLOSE_VEL = 1000;

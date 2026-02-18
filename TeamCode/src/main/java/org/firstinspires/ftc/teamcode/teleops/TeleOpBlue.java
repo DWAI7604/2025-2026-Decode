@@ -29,17 +29,20 @@ public class TeleOpBlue extends LinearOpMode {
     private PinpointLocalizer localizer;
     private Pose2d pose;
 
-    public static double blockerPosClosed = .11;
-    public static double blockerPosOpened = .52;
+    public static double blockerPosClosed = .34;
+    public static double blockerPosOpened = .14;
+
+    public static double angleMax = 1;
+    public static double angleMin = 0.38;
 
     public static double launchTimerDelayToIntake_FAR = 0; //ms
-    public static double launchTimerDelayToPassthrough_FAR = 0; //ms
-    public static double launchTimerDelayToIntake_MED = 100; //ms
-    public static double launchTimerDelayToPassthrough_MED = 0; //ms
-    public static double launchTimerDelayToIntake_CLOSE = 100; //ms
-    public static double launchTimerDelayToPassthrough_CLOSE = 0; //ms
+    //    public static double launchTimerDelayToPassthrough_FAR = 0; //ms
+    public static double launchTimerDelayToIntake_MED = 0; //ms
+    //    public static double launchTimerDelayToPassthrough_MED = 0; //ms
+    public static double launchTimerDelayToIntake_CLOSE = 0; //ms
+    //    public static double launchTimerDelayToPassthrough_CLOSE = 0; //ms
     private static double launchTimerDelayToIntake = launchTimerDelayToIntake_FAR; //ms
-    private static double launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_FAR; //ms
+//    private static double launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_FAR; //ms
 
     public static double limSwitchDelayToPassthrough = 250; // ms
     private ElapsedTime passthroughTimer = new ElapsedTime();
@@ -47,18 +50,18 @@ public class TeleOpBlue extends LinearOpMode {
     public static double INTAKE_POWER_CLOSE = 1.0;
     public static double INTAKE_POWER_FAR = 0.35;
     private double intakePower = INTAKE_POWER_FAR;
-    public static double PASSTHROUGH_POWER_CLOSE = 0.75;
-    public static double PASSTHROUGH_POWER_MED = 0.75;
-    public static double PASSTHROUGH_POWER_FAR = 0.725;
-    private static double passthroughPower = PASSTHROUGH_POWER_FAR;
+//    public static double PASSTHROUGH_POWER_CLOSE = 0.75;
+//    public static double PASSTHROUGH_POWER_MED = 0.75;
+//    public static double PASSTHROUGH_POWER_FAR = 0.725;
+//    private static double passthroughPower = PASSTHROUGH_POWER_FAR;
 
-    public static double CLOSE_VEL = 1040;
-    public static double MED_VEL = 1200;
-    public static double FAR_VEL = 1395;
+    public static double CLOSE_VEL = 1025;
+    public static double MED_VEL = 1150;
+    public static double FAR_VEL = 1450;
 
-    public static double CLOSE_ANG = 0.5;
-    public static double MED_ANG = 0.3;
-    public static double FAR_ANG = 0;
+    public static double CLOSE_ANG = 0.52;
+    public static double MED_ANG = 0.85;
+    public static double FAR_ANG = 0.95;
 
     public static double YAW_STRENGTH = 0.85;
     public static double AUTOAIM_STICK_STRENGTH_FAR = 0.14;
@@ -72,22 +75,24 @@ public class TeleOpBlue extends LinearOpMode {
     private DcMotor rightBackDriveMotor;
 
     private DcMotor intake;
-    private DcMotor passthrough;
-    private DcMotorEx flywheel;
+//    private DcMotor passthrough;
+    private DcMotorEx flywheel1;
+    private DcMotorEx flywheel2;
     private Servo blocker;
     private Servo angleAdjustServo;
     private TouchSensor limitSwitch;
 
     private double flywheelPower;
     private double flywheelTarVel = 0;
+    private double flywheelTempVel = 0;
     private double angleAdjust;
     private IntakeState intakeState = IntakeState.off;
     private ElapsedTime launchTimer = new ElapsedTime();
 
     public static int flywheel_step = 0;
 
-    public static double flywheel_step_diff = 100.0; // ms
-    public static int flywheel_step_max = 16;
+    public static double flywheel_step_diff = 50; // inc vel
+    public static double flywheel_step_pause = 100; // ms
 
     private double velocity = 0;
 
@@ -97,7 +102,7 @@ public class TeleOpBlue extends LinearOpMode {
     private boolean blockerClosedPrimary = true;
     private boolean blockerClosedSecondary = true;
     private boolean launching = false;
-    private boolean ballReady = false;
+//    private boolean ballReady = false;
     private boolean firstPass = true;
 
     private DriveState driveState = DriveState.fieldCentric;
@@ -180,14 +185,19 @@ public class TeleOpBlue extends LinearOpMode {
         rightBackDriveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //Establish hardware properties for other devices
-        flywheel = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel");
-//        flywheel.setDirection(DcMotor.Direction.REVERSE);
-        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(700, 0.1, 0, 15));
+        flywheel1 = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel1");
+        flywheel1.setDirection(DcMotor.Direction.REVERSE);
+        flywheel1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
-        passthrough.setDirection(DcMotor.Direction.REVERSE);
-        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        flywheel2 = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel2");
+//        flywheel2.setDirection(DcMotor.Direction.REVERSE);
+        flywheel2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        flywheel1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(380, 0.2, 0, 0));
+        flywheel2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(380, 0.2, 0, 0));
+
+//        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
+//        passthrough.setDirection(DcMotor.Direction.REVERSE);
+//        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         intake = hardwareMap.get(DcMotor.class, "intake");
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -253,10 +263,10 @@ public class TeleOpBlue extends LinearOpMode {
                         flywheel_step = 1;
                     }
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
-                    passthroughPower = PASSTHROUGH_POWER_CLOSE;
+//                    passthroughPower = PASSTHROUGH_POWER_CLOSE;
                     intakePower = INTAKE_POWER_CLOSE;
                     launchTimerDelayToIntake = launchTimerDelayToIntake_CLOSE;
-                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_CLOSE;
+//                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_CLOSE;
                     flywheelPower = 0.525;
                     flywheelTarVel = CLOSE_VEL;
                     angleAdjust = CLOSE_ANG;
@@ -273,10 +283,10 @@ public class TeleOpBlue extends LinearOpMode {
                         flywheel_step = 1;
                     }
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_CLOSE;
-                    passthroughPower = PASSTHROUGH_POWER_MED;
+//                    passthroughPower = PASSTHROUGH_POWER_MED;
                     intakePower = INTAKE_POWER_CLOSE;
                     launchTimerDelayToIntake = launchTimerDelayToIntake_MED;
-                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_MED;
+//                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_MED;
                     flywheelPower = 0.60;
                     flywheelTarVel = MED_VEL;
                     angleAdjust = MED_ANG;
@@ -293,10 +303,10 @@ public class TeleOpBlue extends LinearOpMode {
                         flywheel_step = 1;
                     }
                     autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_FAR;
-                    passthroughPower = PASSTHROUGH_POWER_FAR;
+//                    passthroughPower = PASSTHROUGH_POWER_FAR;
                     intakePower = INTAKE_POWER_FAR;
                     launchTimerDelayToIntake = launchTimerDelayToIntake_FAR;
-                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_FAR;
+//                    launchTimerDelayToPassthrough = launchTimerDelayToPassthrough_FAR;
                     flywheelPower = 0.725;
                     flywheelTarVel = FAR_VEL;
                     angleAdjust = FAR_ANG;
@@ -333,35 +343,27 @@ public class TeleOpBlue extends LinearOpMode {
                 }
             }
 
-            if (updateFlywheel || flywheelLowering) {
-//                flywheelPower = Math.max(Math.min(flywheelPower, 0.85), 0); // caps flywheel from going above 85% or into reverse
-//                flywheel.setPower(flywheelPower);
+            if (flywheelTempVel != flywheelTarVel && flywheelLowerTimer.milliseconds() > flywheel_step_pause) {
 
-                if (flywheelLowering) {
+                double error = flywheelTarVel - flywheelTempVel;
 
-                    if (flywheel_step == 1)
-                        velocity = flywheel.getVelocity();
+                if (Math.abs(error) < flywheel_step_diff)
+                    flywheelTempVel = flywheelTarVel;
 
-                    if (flywheel_step > flywheel_step_max) {
+                else if (error > 0)
+                    flywheelTempVel += flywheel_step_diff;
 
-                        flywheelLowering = false;
-                        flywheel_step++;
-                        flywheel.setVelocity(flywheelTarVel);
+                else if (error < 0)
+                    flywheelTempVel -= flywheel_step_diff;
 
-                    } else if (flywheelLowerTimer.milliseconds() > flywheel_step_diff) {
+                flywheelLowerTimer.reset();
 
-                        velocity = (flywheelTarVel + velocity * (flywheel_step_max - flywheel_step)) / (flywheel_step_max + 1 - flywheel_step);
-
-                        flywheel.setVelocity(velocity);
-                        flywheel_step++;
-                        flywheelLowerTimer.reset();
-
-                    }
-
-                } else
-                    flywheel.setVelocity(flywheelTarVel);
             }
-            panelsTelemetry.getTelemetry().addData("hypothetical velocity", velocity);
+
+            flywheel1.setVelocity(flywheelTempVel);
+            flywheel2.setVelocity(flywheelTempVel);
+
+            panelsTelemetry.getTelemetry().addData("hypothetical velocity", flywheelTempVel);
 
             double vagueError = wrapHeading(Math.atan2(AIM_Y - pose.position.y, AIM_X - pose.position.x)- pose.heading.toDouble()+ Math.toRadians(180)) - turretHeading;
 
@@ -372,7 +374,7 @@ public class TeleOpBlue extends LinearOpMode {
 //                telemetry.addData("rumble2: ", "is rumbling");
 //            }
 
-            if (Math.abs(vagueError) > TURRET_ERROR_THRESHOLD || Math.abs(flywheel.getVelocity() - flywheelTarVel) > 30) {
+            if (Math.abs(vagueError) > TURRET_ERROR_THRESHOLD || Math.abs(flywheel1.getVelocity() - flywheelTarVel) > 30) {
                 gamepad2.rumble(0.5, 0.5, 50);
                 telemetry.addData("rumble2: ", "is rumbling");
             }
@@ -394,7 +396,7 @@ public class TeleOpBlue extends LinearOpMode {
                     launching = true;
                 } else {
                     intake.setPower(0);
-                    passthrough.setPower(0);
+//                    passthrough.setPower(0);
 //                    blocker.setPosition(blockerPosClosed);
                     blockerClosedPrimary = true;
                     launching = false;
@@ -403,14 +405,14 @@ public class TeleOpBlue extends LinearOpMode {
 
             if (launching) {
 
-                ballReady = false;
+//                ballReady = false;
 
 //                blocker.setPosition(blockerPosOpened);
                 blockerClosedPrimary = false;
 
-                if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
-                    passthrough.setPower(passthroughPower);
-                }
+//                if (launchTimer.milliseconds() >= launchTimerDelayToPassthrough) {
+//                    passthrough.setPower(passthroughPower);
+//                }
 
                 if (launchTimer.milliseconds() >= launchTimerDelayToIntake) {
                     intake.setPower(intakePower);
@@ -427,24 +429,24 @@ public class TeleOpBlue extends LinearOpMode {
             }
 
             // ===== LIMIT SWITCH TURNING OFF PASSTHROUGH =====
-            if (limitSwitchIsPressed && intakeState != IntakeState.reject) {
-                ballReady = true;
-            }
-
-            if (!launching && ballReady) {
-
-                if (firstPass) {
-                    passthroughTimer.reset();
-                }
-
-                if (passthroughTimer.milliseconds() >= limSwitchDelayToPassthrough) {
-                    passthrough.setPower(0);
-                }
-
-                firstPass = false;
-            } else {
-                firstPass = true;
-            }
+//            if (limitSwitchIsPressed && intakeState != IntakeState.reject) {
+//                ballReady = true;
+//            }
+//
+//            if (!launching && ballReady) {
+//
+//                if (firstPass) {
+//                    passthroughTimer.reset();
+//                }
+//
+//                if (passthroughTimer.milliseconds() >= limSwitchDelayToPassthrough) {
+//                    passthrough.setPower(0);
+//                }
+//
+//                firstPass = false;
+//            } else {
+//                firstPass = true;
+//            }
 
             // ===== INTAKE STATE CHANGING =====
             /*\
@@ -464,9 +466,9 @@ public class TeleOpBlue extends LinearOpMode {
                         intake.setPower(INTAKE_POWER_CLOSE);
                         intakeState = IntakeState.on;
 
-                        if (!ballReady) {
-                            passthrough.setPower(passthroughPower);
-                        }
+//                        if (!ballReady) {
+//                            passthrough.setPower(passthroughPower);
+//                        }
                     }
                 }
 
@@ -484,9 +486,9 @@ public class TeleOpBlue extends LinearOpMode {
                         intake.setPower(INTAKE_POWER_CLOSE);
                         intakeState = IntakeState.on;
 
-                        if (!ballReady) {
-                            passthrough.setPower(passthroughPower);
-                        }
+//                        if (!ballReady) {
+//                            passthrough.setPower(passthroughPower);
+//                        }
                     }
                 }
 
@@ -497,13 +499,13 @@ public class TeleOpBlue extends LinearOpMode {
                 if (b1Prev) {
                     if (intakeState == IntakeState.reject) {
                         intake.setPower(0);
-                        passthrough.setPower(passthroughPower);
+//                        passthrough.setPower(passthroughPower);
                         intakeState = IntakeState.off;
                     } else {
                         intake.setPower(-INTAKE_POWER_CLOSE);
                         intakeState = IntakeState.reject;
-                        passthrough.setPower(-passthroughPower);
-                        ballReady = false;
+//                        passthrough.setPower(-passthroughPower);
+//                        ballReady = false;
                     }
                 }
 
@@ -516,13 +518,13 @@ public class TeleOpBlue extends LinearOpMode {
              * dpad right pauses it
              * dpad down rejects the artifact
             \*/
-            if (gamepad1.dpad_up) {
-                passthrough.setPower(passthroughPower);
-            } else if (gamepad1.dpad_right) {
-                passthrough.setPower(0);
-            } else if (gamepad1.dpad_down) {
-                passthrough.setPower(-passthroughPower);
-            }
+//            if (gamepad1.dpad_up) {
+//                passthrough.setPower(passthroughPower);
+//            } else if (gamepad1.dpad_right) {
+//                passthrough.setPower(0);
+//            } else if (gamepad1.dpad_down) {
+//                passthrough.setPower(-passthroughPower);
+//            }
 
             // ===== ADJUST ANGLE OF FLYWHEEL =====
             /*\
@@ -535,9 +537,9 @@ public class TeleOpBlue extends LinearOpMode {
 
                 if (dpadLeft2Prev) {
                     if (gamepad2.left_trigger > 0.5)
-                        angleAdjust += 0.10;
+                        angleAdjust -= 0.10;
                     else
-                        angleAdjust += 0.05;
+                        angleAdjust -= 0.05;
                     updateAngleOfFlywheel = true;
                 }
             } else if (gamepad2.dpad_right != dpadRight2Prev) {
@@ -545,14 +547,14 @@ public class TeleOpBlue extends LinearOpMode {
 
                 if (dpadRight2Prev) {
                     if (gamepad2.left_trigger > 0.5)
-                        angleAdjust -= 0.10;
+                        angleAdjust += 0.10;
                     else
-                        angleAdjust -= 0.05;
+                        angleAdjust += 0.05;
                     updateAngleOfFlywheel = true;
                 }
             }
             if (updateAngleOfFlywheel) {
-                angleAdjust = Math.max(Math.min(angleAdjust, 1.0), 0);
+                angleAdjust = Math.max(Math.min(angleAdjust, angleMax), angleMin);
 
                 angleAdjustServo.setPosition(angleAdjust);
             }
@@ -663,13 +665,15 @@ public class TeleOpBlue extends LinearOpMode {
 //            telemetry.addData("Power", flywheelPower);
             telemetry.addData("heading", pose.heading.toDouble());
             telemetry.addData("angle of flywheel", angleAdjust);
-            telemetry.addData("velocity of flywheel", flywheel.getVelocity());
+            telemetry.addData("velocity of flywheel 1", flywheel1.getVelocity());
+            telemetry.addData("velocity of flywheel 2", flywheel2.getVelocity());
             telemetry.addData("TARVEL of flywheel", flywheelTarVel);
             telemetry.addData("x", pose.position.x);
             telemetry.addData("y", pose.position.y);
             telemetry.update();
 
-            panelsTelemetry.getTelemetry().addData("flywheel velocity", flywheel.getVelocity());
+            panelsTelemetry.getTelemetry().addData("flywheel velocity 1", flywheel1.getVelocity());
+            panelsTelemetry.getTelemetry().addData("flywheel velocity 2", flywheel2.getVelocity());
             panelsTelemetry.getTelemetry().addData("flywheel target", flywheelTarVel);
 //            panelsTelemetry.getTelemetry().addData("feeder position", feeder.getPosition());
 

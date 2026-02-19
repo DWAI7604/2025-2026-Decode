@@ -101,8 +101,8 @@ public class CloseTwelveBallRed extends LinearOpMode {
 
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(1000),
-                                flywheel.angle(0.6),
+                                flywheel.velocity(1020),
+                                flywheel.angle(0.52),
                                 flywheel.closeBlocker(),
                                 turret.followGoalRed(-40, 17, Math.toRadians(0))
                         ),
@@ -110,25 +110,25 @@ public class CloseTwelveBallRed extends LinearOpMode {
 
                         new ParallelAction(
                                 moveThroughIntake1,
-                                intake.passthrough(),
-                                intake.intakeIn(4600),
-                                flywheel.velocity(1000)
+//                                intake.passthrough(),
+                                intake.intakeIn(2500),
+                                flywheel.velocity(1020)
                         ),
                         flywheel.launchClose(),
 
                         new ParallelAction(
                                 moveThroughIntake2,
-                                intake.passthrough(),
-                                intake.intakeIn(4600),
-                                flywheel.velocity(1000)
+//                                intake.passthrough(),
+                                intake.intakeIn(2500),
+                                flywheel.velocity(1020)
                         ),
                         flywheel.launchClose(),
 
                         new ParallelAction(
                                 moveThroughIntake3,
-                                intake.passthrough(),
-                                intake.intakeIn(4600),
-                                flywheel.velocity(1000)
+//                                intake.passthrough(),
+                                intake.intakeIn(2900),
+                                flywheel.velocity(1020)
                         ),
                         flywheel.launchClose(),
 

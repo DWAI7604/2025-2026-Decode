@@ -111,7 +111,7 @@ public class Turret {
 //            targetTurretHeading = robotHeading;
 
             turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
-            goalHeading = Math.atan2(AIM_Y - yPos, AIM_X - xPos);
+            goalHeading = Math.atan2(AIM_Y - yPos, AIM_X + 2 - xPos);
             targetTurretHeading = wrapHeading(goalHeading - robotHeading + Math.toRadians(180));
 
             if (targetTurretHeading > MAX_HEADING)

@@ -13,11 +13,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Intake {
     private DcMotor intake;
-    private DcMotor passthrough;
+//    private DcMotor passthrough;
     private TouchSensor limitSwitch;
 
-    private static double INTAKE_POWER = 1.0;
-    private static double PASSTHROUGH_POWER = 0.70;
+    private static double INTAKE_POWER = 0.9;
+//    private static double PASSTHROUGH_POWER = 0.70;
 
     public static double limSwitchDelayToPassthrough = 250; // ms
 
@@ -25,9 +25,9 @@ public class Intake {
         intake = hardwareMap.get(DcMotor.class, "intake");
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
-        passthrough.setDirection(DcMotor.Direction.REVERSE);
-        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        passthrough = hardwareMap.get(DcMotor.class, "passthrough");
+//        passthrough.setDirection(DcMotor.Direction.REVERSE);
+//        passthrough.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
     }
@@ -59,46 +59,46 @@ public class Intake {
         }
     }
 
-    public class Passthrough implements Action {
-        private boolean passthroughInitialized = false;
-        private ElapsedTime passthroughTimer = new ElapsedTime();
-
-        private boolean ending = false;
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet) {
-            if (!passthroughInitialized) {
-                passthroughInitialized = true;
-                passthroughTimer.reset();
-
-                passthrough.setPower(PASSTHROUGH_POWER);
-            }
-
-            if (!limitSwitch.isPressed() && !ending) { //  negative on lim switch because limit switch is wired backwards
-
-                ending = true;
-
-                passthroughTimer.reset();
-
-            }
-
-            if (ending && passthroughTimer.milliseconds() > limSwitchDelayToPassthrough) {
-                passthrough.setPower(0);
-                return false;
-            }
-
-            if (passthroughTimer.milliseconds() > 7000) {
-                passthrough.setPower(0);
-                return false;
-            }
-
-            return true;
-        }
-    }
+//    public class Passthrough implements Action {
+//        private boolean passthroughInitialized = false;
+//        private ElapsedTime passthroughTimer = new ElapsedTime();
+//
+//        private boolean ending = false;
+//
+//        @Override
+//        public boolean run(@NonNull TelemetryPacket packet) {
+//            if (!passthroughInitialized) {
+//                passthroughInitialized = true;
+//                passthroughTimer.reset();
+//
+//                passthrough.setPower(PASSTHROUGH_POWER);
+//            }
+//
+//            if (!limitSwitch.isPressed() && !ending) { //  negative on lim switch because limit switch is wired backwards
+//
+//                ending = true;
+//
+//                passthroughTimer.reset();
+//
+//            }
+//
+//            if (ending && passthroughTimer.milliseconds() > limSwitchDelayToPassthrough) {
+//                passthrough.setPower(0);
+//                return false;
+//            }
+//
+//            if (passthroughTimer.milliseconds() > 7000) {
+//                passthrough.setPower(0);
+//                return false;
+//            }
+//
+//            return true;
+//        }
+//    }
 
     public Action intakeIn(double milliseconds) {
         return new IntakeIn(milliseconds);
     }
 
-    public Action passthrough () { return new Passthrough(); }
+//    public Action passthrough () { return new Passthrough(); }
 }

@@ -19,7 +19,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 
 @TeleOp(name="*TeleOp - RED")
-//@Configurable
+@Configurable
 public class TeleOpRed extends LinearOpMode {
 
     public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
@@ -48,7 +48,7 @@ public class TeleOpRed extends LinearOpMode {
     private ElapsedTime passthroughTimer = new ElapsedTime();
 
     public static double INTAKE_POWER_CLOSE = 0.9;
-    public static double INTAKE_POWER_FAR = 0.9;
+    public static double INTAKE_POWER_FAR = 0.75;
     private double intakePower = INTAKE_POWER_FAR;
 //    public static double PASSTHROUGH_POWER_CLOSE = 0.75;
 //    public static double PASSTHROUGH_POWER_MED = 0.75;
@@ -130,8 +130,8 @@ public class TeleOpRed extends LinearOpMode {
     private static double TURRET_GEAR_RATIO = 24.0 / 136.0;
     public static double FUDGE = 6.2824155667973;
 
-    public static double MAX_HEADING = Math.toRadians(130.0);
-    public static double MIN_HEADING = Math.toRadians(-130.0);
+    public static double MAX_HEADING = Math.toRadians(90.0);
+    public static double MIN_HEADING = Math.toRadians(-90.0);
 
     public static double TURRET_ERROR_THRESHOLD = 0.3;
 

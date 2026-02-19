@@ -25,14 +25,11 @@ public class MeepMeepTesting {
 //                .setReversed(true)
 //                .splineToLinearHeading(new Pose2d(new Vector2d(57, 17), Math.toRadians(45)), 0)
 //                .waitSeconds(1) // LAUNCH 3 BALLS closest strike
-//                .splineToLinearHeading(new Pose2d(new Vector2d(47, 42), Math.toRadians(45)), Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(new Vector2d(54, 63), Math.toRadians(0)), Math.toRadians(0))
-//                .splineTo(new Vector2d(54, 63), Math.toRadians(0))
-//                .splineTo(new Vector2d(63, 63), Math.toRadians(0))
-                .lineToXConstantHeading(63)
-                .lineToXConstantHeading(55)
-                .splineToLinearHeading(new Pose2d(new Vector2d(55, 15), Math.toRadians(45)), 0)
-                .waitSeconds(1) // LAUNCH 3 BALLS human player
+//                .splineToLinearHeading(new Pose2d(new Vector2d(54, 63), Math.toRadians(0)), Math.toRadians(0))
+//                .lineToXConstantHeading(63)
+//                .lineToXConstantHeading(55)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(55, 15), Math.toRadians(45)), 0)
+//                .waitSeconds(1) // LAUNCH 3 BALLS human player
 //                .setReversed(true)
 //                .splineToLinearHeading(new Pose2d(new Vector2d(45, 14), Math.toRadians(160)), Math.toRadians(160))
 //                .splineTo(new Vector2d(72.0/6, 40), Math.toRadians(90))
@@ -40,6 +37,14 @@ public class MeepMeepTesting {
 //                .setReversed(true)
 //                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
 //                .waitSeconds(1) // LAUNCH 3 BALLS middle strike
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(58, 20), Math.toRadians(90)), Math.toRadians(90))
+//                .setReversed(true)
+                .splineTo(new Vector2d(63, 40), Math.toRadians(90))
+                .splineTo(new Vector2d(36, 61), Math.toRadians(180))
+                .setReversed(true)
+                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
+                .waitSeconds(1) // LAUNCH FROM INTAKE
                 .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(47, 22), Math.toRadians(90)), Math.toRadians(90))
                 .build());

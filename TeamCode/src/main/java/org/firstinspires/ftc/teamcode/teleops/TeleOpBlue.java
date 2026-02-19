@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.PinpointLocalizer;
 import org.firstinspires.ftc.teamcode.PoseStorage;
 
@@ -107,6 +108,7 @@ public class TeleOpBlue extends LinearOpMode {
 
     private DriveState driveState = DriveState.fieldCentric;
     private ShotLocation shotLocation = ShotLocation.far;
+    private FlywheelState flywheelState;
 
     private boolean a1Prev = false;
     private boolean b1Prev = false;
@@ -783,6 +785,44 @@ public class TeleOpBlue extends LinearOpMode {
 
     } // returns yaw for rotation to goal
 
+    public double flywheelSpeed() {
+        double dist;
+        double tarVelo;
+        double poseX = localizer.driver.getPosX(DistanceUnit.CM);
+        double poseY = localizer.driver.getPosY(DistanceUnit.CM);
+
+        dist = Math.sqrt(Math.pow((poseX-39),2)+Math.pow((poseY-30),2));
+
+        tarVelo = (0.532874*Math.pow(dist,3)) - (9.07722*Math.pow(dist,2)) + 94.07158*(dist) + 845.27391;
+
+        if (flywheelState == FlywheelState.far) {
+            if (tarVelo < 1350) {
+                tarVelo = 1350;
+            }
+        } else if (flywheelState == FlywheelState.close) {
+            if (tarVelo > 1300) {
+                tarVelo = 1300;
+            }
+        }
+
+        return tarVelo;
+
+    }
+
+    public double flywheelAngle() {
+        double dist;
+        double tarAngle;
+        double poseX = localizer.driver.getPosX(DistanceUnit.CM);
+        double poseY = localizer.driver.getPosY(DistanceUnit.CM);
+
+        dist = Math.sqrt(Math.pow((poseX-39),2)+Math.pow((poseY-30),2));
+
+        tarAngle = (0.00153155*Math.pow(dist,3)) - (0.0362578*Math.pow(dist,2)) + 0.291011*(dist) - 0.00902841;
+
+        return tarAngle;
+
+    }
+
     enum DriveState {
         fieldCentric, autoAim, robotCentric
     }
@@ -793,5 +833,9 @@ public class TeleOpBlue extends LinearOpMode {
 
     enum ShotLocation {
         far, medium, close
+    }
+
+    enum FlywheelState {
+        far, close
     }
 }

@@ -91,6 +91,7 @@ public class DoubleFlywheel extends LinearOpMode {
     private boolean dpadLeft2Prev = false;
     private boolean dpadRight2Prev = false;
     private boolean bumperR2Prev = false;
+    private boolean bumperL2Prev = false;
 
     @Override
     public void runOpMode() {
@@ -346,6 +347,16 @@ public class DoubleFlywheel extends LinearOpMode {
                 }
             }
 
+            if (gamepad2.left_bumper != bumperL2Prev) {
+                bumperL2Prev = gamepad2.left_bumper;
+
+                if (bumperL2Prev) {
+                    intake.setPower(INTAKE_POWER);
+                } else {
+                    intake.setPower(0);
+                }
+            }
+
             if (launching) {
 
                 blocker.setPosition(blockerPosOpened);
@@ -370,6 +381,8 @@ public class DoubleFlywheel extends LinearOpMode {
             panelsTelemetry.getTelemetry().update();
 
         }
+
+
 
     }
 }

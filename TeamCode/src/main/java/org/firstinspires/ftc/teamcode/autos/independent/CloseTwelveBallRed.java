@@ -104,7 +104,7 @@ public class CloseTwelveBallRed extends LinearOpMode {
                                 flywheel.velocity(1020),
                                 flywheel.angle(0.52),
                                 flywheel.closeBlocker(),
-                                turret.followGoalRed(-40, 17, Math.toRadians(0))
+                                turret.followGoalRed(-40, 17, Math.toRadians(2))
                         ),
                         flywheel.launchClose(),
 
@@ -112,14 +112,15 @@ public class CloseTwelveBallRed extends LinearOpMode {
                                 moveThroughIntake1,
 //                                intake.passthrough(),
                                 intake.intakeIn(2500),
-                                flywheel.velocity(1020)
+                                flywheel.velocity(1020),
+                                turret.followGoalRed(-40, 17, Math.toRadians(4))
                         ),
                         flywheel.launchClose(),
 
                         new ParallelAction(
                                 moveThroughIntake2,
 //                                intake.passthrough(),
-                                intake.intakeIn(2500),
+                                intake.intakeIn(2800),
                                 flywheel.velocity(1020)
                         ),
                         flywheel.launchClose(),
@@ -128,7 +129,8 @@ public class CloseTwelveBallRed extends LinearOpMode {
                                 moveThroughIntake3,
 //                                intake.passthrough(),
                                 intake.intakeIn(2900),
-                                flywheel.velocity(1020)
+                                flywheel.velocity(1020),
+                                turret.followGoalRed(-40, 17, Math.toRadians(6))
                         ),
                         flywheel.launchClose(),
 

@@ -114,16 +114,16 @@ public class FarTwelveBallRed extends LinearOpMode {
                                 flywheel.velocity(1450),
                                 flywheel.angle(0.82),
                                 flywheel.closeBlocker(),
-                                turret.followGoalRedFar(59, 14, Math.toRadians(49))
+                                turret.followGoalRedFar(59, 14, Math.toRadians(50))
                         ),
                         flywheel.launchFar(),
 
                         new ParallelAction(
                                 moveThroughIntake1,
 //                                intake.passthrough(),
-                                intake.intakeIn(4600),
-                                flywheel.velocity(1450),
-                                turret.followGoalRedFar(59, 14, Math.toRadians(45))
+                                intake.intakeIn(3000),
+                                flywheel.velocity(1450)
+//                                turret.followGoalRedFar(59, 14, Math.toRadians(45))
                         ),
                         flywheel.launchFar(),
 
@@ -131,8 +131,8 @@ public class FarTwelveBallRed extends LinearOpMode {
                                 moveThroughIntakeHP,
 //                                intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(1450),
-                                turret.followGoalRedFar(59, 14, Math.toRadians(42))
+                                flywheel.velocity(1450)
+//                                turret.followGoalRedFar(59, 14, Math.toRadians(42))
                         ),
                         flywheel.launchFar(),
 

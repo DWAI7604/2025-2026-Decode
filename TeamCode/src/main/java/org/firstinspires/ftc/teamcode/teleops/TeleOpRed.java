@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.PinpointLocalizer;
 import org.firstinspires.ftc.teamcode.PoseStorage;
 
@@ -160,6 +161,8 @@ public class TeleOpRed extends LinearOpMode {
     private double targetTurretHeading;
     private double errorHeading;
 
+    private FlywheelState flywheelState = FlywheelState.close;
+
     private ElapsedTime timer = new ElapsedTime();
 
     private double power = 0;
@@ -270,6 +273,7 @@ public class TeleOpRed extends LinearOpMode {
                     flywheelPower = 0.525;
                     flywheelTarVel = CLOSE_VEL;
                     angleAdjust = CLOSE_ANG;
+                    flywheelState = FlywheelState.close;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -290,6 +294,7 @@ public class TeleOpRed extends LinearOpMode {
                     flywheelPower = 0.60;
                     flywheelTarVel = MED_VEL;
                     angleAdjust = MED_ANG;
+                    flywheelState = FlywheelState.close;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -310,6 +315,7 @@ public class TeleOpRed extends LinearOpMode {
                     flywheelPower = 0.725;
                     flywheelTarVel = FAR_VEL;
                     angleAdjust = FAR_ANG;
+                    flywheelState = FlywheelState.far;
                     angleAdjustServo.setPosition(angleAdjust);
                     updateFlywheel = true;
                 }
@@ -342,6 +348,11 @@ public class TeleOpRed extends LinearOpMode {
                     updateFlywheel = true;
                 }
             }
+
+//            flywheelTarVel = flywheelSpeed();
+//            angleAdjust = flywheelAngle();
+//
+//            angleAdjustServo.setPosition(angleAdjust);
 
             if (flywheelTempVel != flywheelTarVel && flywheelLowerTimer.milliseconds() > flywheel_step_pause) {
 
@@ -783,6 +794,44 @@ public class TeleOpRed extends LinearOpMode {
 
     } // returns yaw for rotation to goal
 
+    public double flywheelSpeed() {
+        double dist;
+        double tarVelo;
+        double poseX = localizer.driver.getPosX(DistanceUnit.CM);
+        double poseY = localizer.driver.getPosY(DistanceUnit.CM);
+
+        dist = Math.sqrt(Math.pow((poseX-(-152.88)),2)+Math.pow((poseY-(143.88)),2)) / 30.48;
+
+        tarVelo = (0.532874*Math.pow(dist,3)) - (9.07722*Math.pow(dist,2)) + 94.07158*(dist) + 845.27391;
+
+        if (flywheelState == FlywheelState.far) {
+            if (tarVelo < 1350) {
+                tarVelo = 1350;
+            }
+        } else if (flywheelState == FlywheelState.close) {
+            if (tarVelo > 1300) {
+                tarVelo = 1300;
+            }
+        }
+
+        return tarVelo;
+
+    }
+
+    public double flywheelAngle() {
+        double dist;
+        double tarAngle;
+        double poseX = localizer.driver.getPosX(DistanceUnit.CM);
+        double poseY = localizer.driver.getPosY(DistanceUnit.CM);
+
+        dist = Math.sqrt(Math.pow((poseX-(-152.88)),2)+Math.pow((poseY-(143.88)),2)) / 30.48;
+
+        tarAngle = (0.00153155*Math.pow(dist,3)) - (0.0362578*Math.pow(dist,2)) + 0.291011*(dist) - 0.00902841;
+
+        return tarAngle;
+
+    }
+
     enum DriveState {
         fieldCentric, autoAim, robotCentric
     }
@@ -793,5 +842,9 @@ public class TeleOpRed extends LinearOpMode {
 
     enum ShotLocation {
         far, medium, close
+    }
+
+    enum FlywheelState {
+        far, close
     }
 }

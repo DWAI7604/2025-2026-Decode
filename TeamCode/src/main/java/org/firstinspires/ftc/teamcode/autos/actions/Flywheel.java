@@ -33,8 +33,8 @@ public class Flywheel {
 //    public static double launchTimerDelayToPassthrough_CLOSE = 0; //ms
     private static double launchTimerDelayToEnd = 1900; // ms
 
-    private static double INTAKE_POWER_CLOSE = 0.9;
-    private static double INTAKE_POWER_FAR = 0.75;
+    private static double INTAKE_POWER_CLOSE = 0.825;
+    private static double INTAKE_POWER_FAR = 0.775;
 
     public Flywheel(HardwareMap hardwareMap) {
         flywheel1 = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel1");
@@ -63,7 +63,7 @@ public class Flywheel {
         private boolean velocityInitialized = false;
         private ElapsedTime velocityTimer = new ElapsedTime();
         double flywheel_step_diff = 50;
-        double flywheel_step_pause = 100;
+        double flywheel_step_pause = 30;
         private ElapsedTime lowerTimer = new ElapsedTime();
         double tarvel = 0;
         double tempvel = 0;

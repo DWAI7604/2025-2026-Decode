@@ -40,13 +40,15 @@ public class MeepMeepTesting {
 //                .setReversed(true)
 //                .splineToLinearHeading(new Pose2d(new Vector2d(58, 20), Math.toRadians(90)), Math.toRadians(90))
 //                .setReversed(true)
-                .splineTo(new Vector2d(63, 40), Math.toRadians(90))
-                .splineTo(new Vector2d(36, 61), Math.toRadians(180))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
-                .waitSeconds(1) // LAUNCH FROM INTAKE
-                .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(47, 22), Math.toRadians(90)), Math.toRadians(90))
+                .splineToLinearHeading(new Pose2d(new Vector2d(60, 12), Math.toRadians(100)), Math.toRadians(100)) // tune pos
+                        .waitSeconds(4)
+                .splineTo(new Vector2d(15, 60), Math.toRadians(90)) // x value = limelight
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
+//                .waitSeconds(1) // LAUNCH FROM INTAKE
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(47, 22), Math.toRadians(90)), Math.toRadians(90))
                 .build());
 
         // ====================== PUSH FAR

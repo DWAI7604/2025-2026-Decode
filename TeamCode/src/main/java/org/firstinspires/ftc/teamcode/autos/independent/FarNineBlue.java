@@ -18,52 +18,52 @@ import org.firstinspires.ftc.teamcode.autos.actions.Flywheel;
 import org.firstinspires.ftc.teamcode.autos.actions.Intake;
 import org.firstinspires.ftc.teamcode.autos.actions.Turret;
 
-@Autonomous(name="Indep - Far 9 - RED", group="Robot")
-public class FarTwelveBallRed extends LinearOpMode {
+@Autonomous(name="Indep - Far 9 - BLUE", group="Robot")
+public class FarNineBlue extends LinearOpMode {
 
     public final MecanumKinematics kinematics = new MecanumKinematics(
             MecanumDrive.PARAMS.inPerTick * MecanumDrive.PARAMS.trackWidthTicks, MecanumDrive.PARAMS.inPerTick / MecanumDrive.PARAMS.lateralInPerTick);
 
     @Override
     public void runOpMode() {
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(62.9, 10.3, Math.toRadians(90)));
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(62.9, -10.3, Math.toRadians(-90)));
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);
         Turret turret = new Turret(hardwareMap);
 
-        Action moveToLaunch = drive.actionBuilder(new Pose2d(62.9, 10.3, Math.toRadians(90)))
-                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
+        Action moveToLaunch = drive.actionBuilder(new Pose2d(62.9, -10.3, Math.toRadians(-90)))
+                .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-45)), 0)
                 .build();
 
-        Action moveThroughIntake1 = drive.actionBuilder(new Pose2d(59, 14, Math.toRadians(45)))
+        Action moveThroughIntake1 = drive.actionBuilder(new Pose2d(59, -14, Math.toRadians(-45)))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(72/2.0, 28), Math.toRadians(90)), Math.toRadians(90))
-                .lineToYConstantHeading(60)
+                .splineToLinearHeading(new Pose2d(new Vector2d(72/2.0, -28), Math.toRadians(-90)), Math.toRadians(-90))
+                .lineToYConstantHeading(-60)
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
+                .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-45)), 0)
                 .build();
 
-        Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(59, 14, Math.toRadians(45)))
-                .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6, 40), Math.toRadians(90)), Math.toRadians(90))
-                .lineToYConstantHeading(60)
-                .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
-                .build();
+//        Action moveThroughIntake2 = drive.actionBuilder(new Pose2d(59, 14, Math.toRadians(45)))
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(72.0/6, 40), Math.toRadians(90)), Math.toRadians(90))
+//                .lineToYConstantHeading(60)
+//                .setReversed(true)
+//                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
+//                .build();
 
-        Action moveThroughIntakeHP = drive.actionBuilder(new Pose2d(59, 14, Math.toRadians(45)))
+        Action moveThroughIntakeHP = drive.actionBuilder(new Pose2d(59, -14, Math.toRadians(-45)))
 //                .splineToLinearHeading(new Pose2d(new Vector2d(47, 42), Math.toRadians(45)), Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(new Vector2d(54, 63), Math.toRadians(0)), Math.toRadians(0))
+                .splineToLinearHeading(new Pose2d(new Vector2d(54, -63), Math.toRadians(0)), Math.toRadians(0))
 //                .splineTo(new Vector2d(54, 63), Math.toRadians(0))
 //                .splineTo(new Vector2d(63, 63), Math.toRadians(0))
                 .lineToXConstantHeading(63)
                 .lineToXConstantHeading(55)
-                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
+                .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-45)), 0)
                 .build();
 
-        Action moveToPark = drive.actionBuilder(new Pose2d(59, 14, Math.toRadians(45)))
+        Action moveToPark = drive.actionBuilder(new Pose2d(59, -14, Math.toRadians(-45)))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(47, 22), Math.toRadians(90)), Math.toRadians(90))
+                .splineToLinearHeading(new Pose2d(new Vector2d(47, -22), Math.toRadians(-90)), Math.toRadians(-90))
                 .build();
 
         double delay = 0; // measured in seconds
@@ -114,7 +114,7 @@ public class FarTwelveBallRed extends LinearOpMode {
                                 flywheel.velocity(1450),
                                 flywheel.angle(0.82),
                                 flywheel.closeBlocker(),
-                                turret.followGoalRedFar(59, 14, Math.toRadians(50))
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-47))
                         ),
                         flywheel.launchFar(),
 
@@ -122,8 +122,8 @@ public class FarTwelveBallRed extends LinearOpMode {
                                 moveThroughIntake1,
 //                                intake.passthrough(),
                                 intake.intakeIn(3000),
-                                flywheel.velocity(1450)
-//                                turret.followGoalRedFar(59, 14, Math.toRadians(45))
+                                flywheel.velocity(1450),
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-45))
                         ),
                         flywheel.launchFar(),
 
@@ -131,8 +131,8 @@ public class FarTwelveBallRed extends LinearOpMode {
                                 moveThroughIntakeHP,
 //                                intake.passthrough(),
                                 intake.intakeIn(4600),
-                                flywheel.velocity(1450)
-//                                turret.followGoalRedFar(59, 14, Math.toRadians(42))
+                                flywheel.velocity(1450),
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-44))
                         ),
                         flywheel.launchFar(),
 

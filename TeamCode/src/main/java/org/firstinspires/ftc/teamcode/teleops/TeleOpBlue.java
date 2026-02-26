@@ -57,11 +57,11 @@ public class TeleOpBlue extends LinearOpMode {
 //    private static double passthroughPower = PASSTHROUGH_POWER_FAR;
 
     public static double CLOSE_VEL = 1025;
-    public static double MED_VEL = 1150;
+    public static double MED_VEL = 1270;
     public static double FAR_VEL = 1450;
 
     public static double CLOSE_ANG = 0.52;
-    public static double MED_ANG = 0.85;
+    public static double MED_ANG = 0.76;
     public static double FAR_ANG = 0.95;
 
     public static double YAW_STRENGTH = 0.85;
@@ -123,6 +123,7 @@ public class TeleOpBlue extends LinearOpMode {
     private boolean dpadLeft2Prev = false;
     private boolean dpadRight2Prev = false;
     private boolean bumperR2Prev = false;
+    private boolean bumperR1Prev = false;
     private boolean bumperL2Prev = false;
     private boolean triggerR1Prev = false;
 
@@ -376,10 +377,10 @@ public class TeleOpBlue extends LinearOpMode {
 //                telemetry.addData("rumble2: ", "is rumbling");
 //            }
 
-            if (Math.abs(vagueError) > TURRET_ERROR_THRESHOLD || Math.abs(flywheel1.getVelocity() - flywheelTarVel) > 30) {
-                gamepad2.rumble(0.5, 0.5, 50);
-                telemetry.addData("rumble2: ", "is rumbling");
-            }
+//            if (Math.abs(vagueError) > TURRET_ERROR_THRESHOLD || Math.abs(flywheel1.getVelocity() - flywheelTarVel) > 30) {
+//                gamepad2.rumble(0.5, 0.5, 50);
+//                telemetry.addData("rumble2: ", "is rumbling");
+//            }
 
             // ===== LAUNCH =====
             /*\
@@ -396,7 +397,20 @@ public class TeleOpBlue extends LinearOpMode {
                 if (bumperR2Prev) {
                     launchTimer.reset();
                     launching = true;
-                } else {
+                }  else {
+                    intake.setPower(0);
+//                    passthrough.setPower(0);
+//                    blocker.setPosition(blockerPosClosed);
+                    blockerClosedPrimary = true;
+                    launching = false;
+                }
+            } else if (gamepad1.right_bumper != bumperR1Prev) {
+                bumperR1Prev = gamepad1.right_bumper;
+
+                if (bumperR1Prev) {
+                    launchTimer.reset();
+                    launching = true;
+                }  else {
                     intake.setPower(0);
 //                    passthrough.setPower(0);
 //                    blocker.setPosition(blockerPosClosed);
@@ -621,7 +635,7 @@ public class TeleOpBlue extends LinearOpMode {
             turretMotor.setPower(power);
 
             // ===== RESET POSITION OF ROBOT =====
-            if (gamepad1.left_bumper && gamepad1.right_bumper) {
+            if (gamepad1.left_bumper) {
                 localizer.setPose( new Pose2d(72 - 8, -(-72 + 30), PI_CONST / 2.0) );
             }
 

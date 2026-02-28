@@ -59,6 +59,33 @@ public class Intake {
         }
     }
 
+    public class IntakeOut implements Action {
+        private boolean initialized2 = false;
+        private ElapsedTime timer2 = new ElapsedTime();
+        private double milliseconds2;
+
+        public IntakeOut(double milliseconds) {
+            this.milliseconds2 = milliseconds;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!initialized2) {
+                initialized2 = true;
+                timer2.reset();
+
+                intake.setPower(-INTAKE_POWER);
+            }
+
+            if (timer2.milliseconds() > milliseconds2) {
+                intake.setPower(0);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
 //    public class Passthrough implements Action {
 //        private boolean passthroughInitialized = false;
 //        private ElapsedTime passthroughTimer = new ElapsedTime();
@@ -98,6 +125,10 @@ public class Intake {
 
     public Action intakeIn(double milliseconds) {
         return new IntakeIn(milliseconds);
+    }
+
+    public Action intakeOut(double milliseconds) {
+        return new IntakeOut(milliseconds);
     }
 
 //    public Action passthrough () { return new Passthrough(); }

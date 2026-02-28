@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.PoseStorage;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
-@Disabled
+//@Disabled
 @TeleOp(name="*TeleOp - BLUE - Heat")
 @Configurable
 public class TeleOpBlueHeatmap extends LinearOpMode {

@@ -52,12 +52,16 @@ public class FarNineRed extends LinearOpMode {
                 .build();
 
         Action moveThroughIntakeHP = drive.actionBuilder(new Pose2d(59, 14, Math.toRadians(45)))
-//                .splineToLinearHeading(new Pose2d(new Vector2d(47, 42), Math.toRadians(45)), Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(new Vector2d(54, 63), Math.toRadians(0)), Math.toRadians(0))
-//                .splineTo(new Vector2d(54, 63), Math.toRadians(0))
-//                .splineTo(new Vector2d(63, 63), Math.toRadians(0))
-                .lineToXConstantHeading(63)
+                .splineTo(new Vector2d(44, 45), Math.toRadians(90))
+                .splineTo(new Vector2d(54, 61.5), Math.toRadians(18))
+                .splineTo(new Vector2d(64, 63), Math.toRadians(0))
                 .lineToXConstantHeading(55)
+                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
+                .build();
+
+        Action moveThroughIntakeRandom = drive.actionBuilder(new Pose2d(59, 14, Math.toRadians(45)))
+                .splineTo(new Vector2d(60, 60), Math.toRadians(90)) // x value = limelight
+                .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
                 .build();
 
@@ -114,7 +118,7 @@ public class FarNineRed extends LinearOpMode {
                                 flywheel.velocity(1450),
                                 flywheel.angle(0.82),
                                 flywheel.closeBlocker(),
-                                turret.followGoalRedFar(59, 14, Math.toRadians(50))
+                                turret.followGoalRedFar(59, 14, Math.toRadians(48))
                         ),
                         flywheel.launchFar(),
 
@@ -122,19 +126,40 @@ public class FarNineRed extends LinearOpMode {
                                 moveThroughIntake1,
 //                                intake.passthrough(),
                                 intake.intakeIn(3000),
-                                flywheel.velocity(1450)
+                                flywheel.velocity(1450),
+                                turret.followGoalRedFar(59, 14, Math.toRadians(46.5))
 //                                turret.followGoalRedFar(59, 14, Math.toRadians(45))
                         ),
+                        turret.followGoalRedFar(59, 14, Math.toRadians(46.5)),
                         flywheel.launchFar(),
 
                         new ParallelAction(
                                 moveThroughIntakeHP,
 //                                intake.passthrough(),
-                                intake.intakeIn(4600),
-                                flywheel.velocity(1450)
+                                intake.intakeIn(3500),
+                                flywheel.velocity(1450),
+                                turret.followGoalRedFar(59, 14, Math.toRadians(43))
 //                                turret.followGoalRedFar(59, 14, Math.toRadians(42))
                         ),
+                        new ParallelAction(
+                                intake.intakeOut(50),
+                                turret.followGoalRedFar(59, 14, Math.toRadians(43))
+                        ),
                         flywheel.launchFar(),
+
+//                        new ParallelAction(
+//                                moveThroughIntakeRandom,
+////                                intake.passthrough(),
+//                                intake.intakeIn(3500),
+//                                flywheel.velocity(1450),
+//                                turret.followGoalRedFar(59, 14, Math.toRadians(46))
+////                                turret.followGoalRedFar(59, 14, Math.toRadians(42))
+//                        ),
+//                        new ParallelAction(
+//                                intake.intakeOut(200),
+//                                turret.followGoalRedFar(59, 14, Math.toRadians(46))
+//                        ),
+//                        flywheel.launchFar(),
 
                         new ParallelAction(
                                 flywheel.stopAll(),

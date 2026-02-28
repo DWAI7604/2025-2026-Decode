@@ -52,12 +52,18 @@ public class FarNineBlue extends LinearOpMode {
 //                .build();
 
         Action moveThroughIntakeHP = drive.actionBuilder(new Pose2d(59, -14, Math.toRadians(-45)))
-//                .splineToLinearHeading(new Pose2d(new Vector2d(47, 42), Math.toRadians(45)), Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(new Vector2d(54, -63), Math.toRadians(0)), Math.toRadians(0))
-//                .splineTo(new Vector2d(54, 63), Math.toRadians(0))
-//                .splineTo(new Vector2d(63, 63), Math.toRadians(0))
-                .lineToXConstantHeading(63)
+                .splineTo(new Vector2d(44, -45), Math.toRadians(-90))
+                .splineTo(new Vector2d(54, -61.5), Math.toRadians(-18))
+                .splineTo(new Vector2d(64, -63), Math.toRadians(0))
                 .lineToXConstantHeading(55)
+                .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-45)), 0)
+                .build();
+
+        Action moveThroughIntakeRandom = drive.actionBuilder(new Pose2d(59, -14, Math.toRadians(-45)))
+                .splineTo(new Vector2d(61, -30), Math.toRadians(-90))
+                .splineTo(new Vector2d(61, -60), Math.toRadians(-90))
+//                .splineTo(new Vector2d(60, -60), Math.toRadians(-90)) // x value = limelight
+                .setReversed(true)
                 .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-45)), 0)
                 .build();
 
@@ -114,8 +120,9 @@ public class FarNineBlue extends LinearOpMode {
                                 flywheel.velocity(1450),
                                 flywheel.angle(0.82),
                                 flywheel.closeBlocker(),
-                                turret.followGoalBlueFar(59, -14, Math.toRadians(-47))
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-48))
                         ),
+                        turret.followGoalBlueFar(59, -14, Math.toRadians(-48)),
                         flywheel.launchFar(),
 
                         new ParallelAction(
@@ -125,16 +132,34 @@ public class FarNineBlue extends LinearOpMode {
                                 flywheel.velocity(1450),
                                 turret.followGoalBlueFar(59, -14, Math.toRadians(-45))
                         ),
+                        turret.followGoalBlueFar(59, -14, Math.toRadians(-45)),
                         flywheel.launchFar(),
 
                         new ParallelAction(
                                 moveThroughIntakeHP,
 //                                intake.passthrough(),
-                                intake.intakeIn(4600),
+                                intake.intakeIn(3500),
                                 flywheel.velocity(1450),
-                                turret.followGoalBlueFar(59, -14, Math.toRadians(-44))
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-43.5))
+                        ),
+                        new ParallelAction(
+                                intake.intakeOut(50),
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-43.5))
                         ),
                         flywheel.launchFar(),
+
+//                        new ParallelAction(
+//                                moveThroughIntakeRandom,
+////                                intake.passthrough(),
+//                                intake.intakeIn(3500),
+//                                flywheel.velocity(1450),
+//                                turret.followGoalBlueFar(59, -14, Math.toRadians(-41.5))
+//                        ),
+//                        new ParallelAction(
+//                                intake.intakeOut(200),
+//                                turret.followGoalBlueFar(59, -14, Math.toRadians(-41.5))
+//                        ),
+//                        flywheel.launchFar(),
 
                         new ParallelAction(
                                 flywheel.stopAll(),

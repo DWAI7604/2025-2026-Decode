@@ -16,8 +16,8 @@ public class MeepMeepTesting {
                 .build();
 
         // ====================== INDEPENDENT FAR
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(62.9, 10.3, Math.toRadians(90)))
-                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(62.9, -10.3, Math.toRadians(-90)))
+                .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-45)), 0)
                 .waitSeconds(1) // LAUNCH 3 BALLS starting
 //                .setReversed(true)
 //                .splineToLinearHeading(new Pose2d(new Vector2d(72/2.0, 28), Math.toRadians(90)), Math.toRadians(90))
@@ -25,8 +25,9 @@ public class MeepMeepTesting {
 //                .setReversed(true)
 //                .splineToLinearHeading(new Pose2d(new Vector2d(57, 17), Math.toRadians(45)), 0)
 //                .waitSeconds(1) // LAUNCH 3 BALLS closest strike
-//                .splineToLinearHeading(new Pose2d(new Vector2d(54, 63), Math.toRadians(0)), Math.toRadians(0))
-//                .lineToXConstantHeading(63)
+//                .splineTo(new Vector2d(44, 45), Math.toRadians(90))
+//                .splineTo(new Vector2d(54, 61.5), Math.toRadians(18))
+//                .splineTo(new Vector2d(64, 63), Math.toRadians(0))
 //                .lineToXConstantHeading(55)
 //                .splineToLinearHeading(new Pose2d(new Vector2d(55, 15), Math.toRadians(45)), 0)
 //                .waitSeconds(1) // LAUNCH 3 BALLS human player
@@ -37,18 +38,13 @@ public class MeepMeepTesting {
 //                .setReversed(true)
 //                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
 //                .waitSeconds(1) // LAUNCH 3 BALLS middle strike
-//                .setReversed(true)
-//                .splineToLinearHeading(new Pose2d(new Vector2d(58, 20), Math.toRadians(90)), Math.toRadians(90))
-//                .setReversed(true)
+                        .splineTo(new Vector2d(61, -30), Math.toRadians(-90))
+                .splineTo(new Vector2d(63, -60), Math.toRadians(-90)) // x value = limelight
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(new Vector2d(60, 12), Math.toRadians(100)), Math.toRadians(100)) // tune pos
-                        .waitSeconds(4)
-                .splineTo(new Vector2d(15, 60), Math.toRadians(90)) // x value = limelight
-//                .setReversed(true)
-//                .splineToLinearHeading(new Pose2d(new Vector2d(59, 14), Math.toRadians(45)), 0)
-//                .waitSeconds(1) // LAUNCH FROM INTAKE
-//                .setReversed(true)
-//                .splineToLinearHeading(new Pose2d(new Vector2d(47, 22), Math.toRadians(90)), Math.toRadians(90))
+                .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-45)), 0)
+                .waitSeconds(1) // LAUNCH FROM INTAKE
+                .setReversed(true)
+                .splineToLinearHeading(new Pose2d(new Vector2d(59, -14), Math.toRadians(-90)), Math.toRadians(-90))
                 .build());
 
         // ====================== PUSH FAR

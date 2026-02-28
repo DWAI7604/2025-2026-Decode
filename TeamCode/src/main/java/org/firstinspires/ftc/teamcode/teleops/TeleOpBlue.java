@@ -58,15 +58,17 @@ public class TeleOpBlue extends LinearOpMode {
 
     public static double CLOSE_VEL = 1025;
     public static double MED_VEL = 1270;
-    public static double FAR_VEL = 1450;
+    public static double FAR_VEL = 1490;
 
     public static double CLOSE_ANG = 0.52;
     public static double MED_ANG = 0.76;
-    public static double FAR_ANG = 0.95;
+    public static double FAR_ANG = 0.85;
 
     public static double YAW_STRENGTH = 0.85;
     public static double AUTOAIM_STICK_STRENGTH_FAR = 0.14;
     public static double AUTOAIM_STICK_STRENGTH_CLOSE = 0.2;
+
+    public static double TURRET_OFFSET = 2.5;
 
     private double autoaim_stick_strength = AUTOAIM_STICK_STRENGTH_FAR;
 
@@ -127,6 +129,9 @@ public class TeleOpBlue extends LinearOpMode {
     private boolean bumperL2Prev = false;
     private boolean triggerR1Prev = false;
 
+    private boolean stickXR2LeftPrev = false;
+    private boolean stickXR2RightPrev = false;
+
     // TURRET
 
     private static double TICKS_PER_REV = 384.5;
@@ -162,6 +167,7 @@ public class TeleOpBlue extends LinearOpMode {
     private double goalHeading;
     private double targetTurretHeading;
     private double errorHeading;
+    private double turretOffset = 0; // in rad
 
     private ElapsedTime timer = new ElapsedTime();
 
@@ -190,11 +196,11 @@ public class TeleOpBlue extends LinearOpMode {
         //Establish hardware properties for other devices
         flywheel1 = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel1");
         flywheel1.setDirection(DcMotor.Direction.REVERSE);
-        flywheel1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        flywheel1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         flywheel2 = (DcMotorEx) hardwareMap.get(DcMotor.class, "flywheel2");
 //        flywheel2.setDirection(DcMotor.Direction.REVERSE);
-        flywheel2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        flywheel2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         flywheel1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(380, 0.2, 0, 0));
         flywheel2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(380, 0.2, 0, 0));
 
@@ -216,7 +222,7 @@ public class TeleOpBlue extends LinearOpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1); // locate ID 24 (red goal)
         limelight.setPollRateHz(100);
-        limelight.start();
+//        limelight.start();
         limelight.pipelineSwitch(1); // locate ID 24 (red goal)
 
         turretMotor = hardwareMap.get(DcMotorEx.class, "turret");
@@ -363,8 +369,13 @@ public class TeleOpBlue extends LinearOpMode {
 
             }
 
-            flywheel1.setVelocity(flywheelTempVel);
-            flywheel2.setVelocity(flywheelTempVel);
+            if (flywheelTarVel == 0) {
+                flywheel1.setPower(0);
+                flywheel2.setPower(0);
+            } else {
+                flywheel1.setVelocity(flywheelTempVel);
+                flywheel2.setVelocity(flywheelTempVel);
+            }
 
             panelsTelemetry.getTelemetry().addData("hypothetical velocity", flywheelTempVel);
 
@@ -577,6 +588,20 @@ public class TeleOpBlue extends LinearOpMode {
 
             // ===== TURRET =====
 
+            if ((gamepad2.left_stick_x < -0.5) != stickXR2LeftPrev) {
+                stickXR2LeftPrev = (gamepad2.left_stick_x < -0.5);
+
+                if (stickXR2LeftPrev) {
+                    turretOffset += Math.toRadians(TURRET_OFFSET);
+                }
+            } else if ((gamepad2.left_stick_x > 0.5) != stickXR2RightPrev) {
+                stickXR2RightPrev = (gamepad2.left_stick_x > 0.5);
+
+                if (stickXR2RightPrev) {
+                    turretOffset -= Math.toRadians(TURRET_OFFSET);
+                }
+            }
+
             result = limelight.getLatestResult();
             double tx = 0;
             if (limelightActive && result != null && result.isValid()) {
@@ -607,7 +632,7 @@ public class TeleOpBlue extends LinearOpMode {
                 robotHeading = pose.heading.toDouble();
                 turretHeading = wrapHeading(turretMotor.getCurrentPosition() / TICKS_PER_REV * (FUDGE) * TURRET_GEAR_RATIO);
                 goalHeading = Math.atan2(AIM_Y - pose.position.y, AIM_X - pose.position.x);
-                targetTurretHeading = wrapHeading(goalHeading - robotHeading + Math.toRadians(180));
+                targetTurretHeading = wrapHeading(goalHeading - robotHeading + Math.toRadians(180) + turretOffset);
 
                 if (targetTurretHeading > MAX_HEADING)
                     targetTurretHeading = MAX_HEADING;
@@ -619,7 +644,7 @@ public class TeleOpBlue extends LinearOpMode {
                 errorHeading = targetTurretHeading - turretHeading;
 
                 if (Math.abs(errorHeading) <= Math.toRadians(40) && limelightActive) {
-                    limelight.start();
+//                    limelight.start();
                     limelight.pipelineSwitch(1); // locate ID 24 (red goal)
                 }
             }

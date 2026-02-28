@@ -10,8 +10,6 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.PoseStorage;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
@@ -28,12 +26,6 @@ public class CloseNineBallRed extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-
-//        DcMotorEx turretMotor = hardwareMap.get(DcMotorEx.class, "turret");
-//        turretMotor.setDirection(DcMotor.Direction.REVERSE);
-//        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
-//        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
-
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-58.4, 45.0, -0.9427));
         Flywheel flywheel = new Flywheel(hardwareMap);
         Intake intake = new Intake(hardwareMap);

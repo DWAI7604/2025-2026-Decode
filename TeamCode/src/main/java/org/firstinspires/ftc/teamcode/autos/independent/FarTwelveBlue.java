@@ -122,7 +122,10 @@ public class FarTwelveBlue extends LinearOpMode {
                                 flywheel.closeBlocker(),
                                 turret.followGoalBlueFar(59, -14, Math.toRadians(-48))
                         ),
-                        turret.followGoalBlueFar(59, -14, Math.toRadians(-48)),
+                        new ParallelAction(
+                                intake.intakeOut(50),
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-48))
+                        ),
                         flywheel.launchFar(),
 
                         new ParallelAction(
@@ -132,7 +135,10 @@ public class FarTwelveBlue extends LinearOpMode {
                                 flywheel.velocity(1450),
                                 turret.followGoalBlueFar(59, -14, Math.toRadians(-45))
                         ),
-                        turret.followGoalBlueFar(59, -14, Math.toRadians(-45)),
+                        new ParallelAction(
+                                intake.intakeOut(50),
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-45))
+                        ),
                         flywheel.launchFar(),
 
                         new ParallelAction(

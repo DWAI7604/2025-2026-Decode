@@ -139,7 +139,10 @@ public class FarBlobBlue extends LinearOpMode {
                                 flywheel.closeBlocker(),
                                 turret.followGoalBlueFar(59, -14, Math.toRadians(-48))
                         ),
-                        turret.followGoalBlueFar(59, -14, Math.toRadians(-48)),
+                        new ParallelAction(
+                                intake.intakeOut(50),
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-48))
+                        ),
                         flywheel.launchFar(),
 
                         new ParallelAction(
@@ -149,7 +152,10 @@ public class FarBlobBlue extends LinearOpMode {
                                 flywheel.velocity(1450),
                                 turret.followGoalBlueFar(59, -14, Math.toRadians(-45))
                         ),
-                        turret.followGoalBlueFar(59, -14, Math.toRadians(-45)),
+                        new ParallelAction(
+                                intake.intakeOut(50),
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-45))
+                        ),
                         flywheel.launchFar(),
 
                         new ParallelAction(
@@ -226,6 +232,10 @@ public class FarBlobBlue extends LinearOpMode {
                                 moveThroughBalls,
                                 intake.intakeIn(2700),
                                 flywheel.velocity(1420),
+                                turret.followGoalBlueFar(59, -14, Math.toRadians(-45))
+                        ),
+                        new ParallelAction(
+                                intake.intakeOut(200),
                                 turret.followGoalBlueFar(59, -14, Math.toRadians(-45))
                         ),
                         flywheel.launchFar()

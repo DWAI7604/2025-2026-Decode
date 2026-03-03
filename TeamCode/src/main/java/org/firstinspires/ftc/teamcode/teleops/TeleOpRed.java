@@ -20,7 +20,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 
 @TeleOp(name="*TeleOp - RED")
-@Configurable
+//@Configurable
 public class TeleOpRed extends LinearOpMode {
 
     public static PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;

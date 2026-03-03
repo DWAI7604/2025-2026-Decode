@@ -106,6 +106,10 @@ public class CloseNineBallRed extends LinearOpMode {
                                 flywheel.closeBlocker(),
                                 turret.followGoalRed(-40, 17, Math.toRadians(2))
                         ),
+                        new ParallelAction(
+                                intake.intakeOut(50),
+                                turret.followGoalRed(-40, 17, Math.toRadians(2))
+                        ),
                         flywheel.launchClose(),
 
                         new ParallelAction(
@@ -115,6 +119,10 @@ public class CloseNineBallRed extends LinearOpMode {
                                 flywheel.velocity(1020),
                                 turret.followGoalRed(-40, 17, Math.toRadians(4))
                         ),
+                        new ParallelAction(
+                                intake.intakeOut(50),
+                                turret.followGoalRed(-40, 17, Math.toRadians(4))
+                        ),
                         flywheel.launchClose(),
 
                         new ParallelAction(
@@ -122,6 +130,10 @@ public class CloseNineBallRed extends LinearOpMode {
 //                                intake.passthrough(),
                                 intake.intakeIn(2800),
                                 flywheel.velocity(1020)
+                        ),
+                        new ParallelAction(
+                                intake.intakeOut(50)
+//                                turret.followGoalRed(-40, 17, Math.toRadians(2))
                         ),
                         flywheel.launchClose(),
 

@@ -115,10 +115,14 @@ public class FarNineRed extends LinearOpMode {
 
                         new ParallelAction(
                                 moveToLaunch,
-                                flywheel.velocity(1450),
+                                flywheel.velocity(1430),
                                 flywheel.angle(0.82),
                                 flywheel.closeBlocker(),
-                                turret.followGoalRedFar(59, 14, Math.toRadians(48))
+                                turret.followGoalRedFar(59, 14, Math.toRadians(47))
+                        ),
+                        new ParallelAction(
+                                intake.intakeOut(50),
+                                turret.followGoalRedFar(59, 14, Math.toRadians(47))
                         ),
                         flywheel.launchFar(),
 
@@ -126,24 +130,27 @@ public class FarNineRed extends LinearOpMode {
                                 moveThroughIntake1,
 //                                intake.passthrough(),
                                 intake.intakeIn(3000),
-                                flywheel.velocity(1450),
-                                turret.followGoalRedFar(59, 14, Math.toRadians(46.5))
+                                flywheel.velocity(1430),
+                                turret.followGoalRedFar(59, 14, Math.toRadians(45.5))
 //                                turret.followGoalRedFar(59, 14, Math.toRadians(45))
                         ),
-                        turret.followGoalRedFar(59, 14, Math.toRadians(46.5)),
+                        new ParallelAction(
+                                intake.intakeOut(50),
+                                turret.followGoalRedFar(59, 14, Math.toRadians(45.5))
+                        ),
                         flywheel.launchFar(),
 
                         new ParallelAction(
                                 moveThroughIntakeHP,
 //                                intake.passthrough(),
                                 intake.intakeIn(3500),
-                                flywheel.velocity(1450),
-                                turret.followGoalRedFar(59, 14, Math.toRadians(43))
+                                flywheel.velocity(1430),
+                                turret.followGoalRedFar(59, 14, Math.toRadians(42))
 //                                turret.followGoalRedFar(59, 14, Math.toRadians(42))
                         ),
                         new ParallelAction(
                                 intake.intakeOut(50),
-                                turret.followGoalRedFar(59, 14, Math.toRadians(43))
+                                turret.followGoalRedFar(59, 14, Math.toRadians(42))
                         ),
                         flywheel.launchFar(),
 
@@ -151,13 +158,13 @@ public class FarNineRed extends LinearOpMode {
 //                                moveThroughIntakeRandom,
 ////                                intake.passthrough(),
 //                                intake.intakeIn(3500),
-//                                flywheel.velocity(1450),
-//                                turret.followGoalRedFar(59, 14, Math.toRadians(46))
+//                                flywheel.velocity(1430),
+//                                turret.followGoalRedFar(59, 14, Math.toRadians(45))
 ////                                turret.followGoalRedFar(59, 14, Math.toRadians(42))
 //                        ),
 //                        new ParallelAction(
 //                                intake.intakeOut(200),
-//                                turret.followGoalRedFar(59, 14, Math.toRadians(46))
+//                                turret.followGoalRedFar(59, 14, Math.toRadians(45))
 //                        ),
 //                        flywheel.launchFar(),
 
